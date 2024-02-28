@@ -1,3 +1,4 @@
+import numpy as np
 from transformers import pipeline
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
@@ -17,7 +18,17 @@ def generate_back_translations(text, tgt_language):
 
   return back_translated_text[0]['translation_text']
 
+
 def get_back_translations(dataset):
 
   return dataset.apply(generate_back_translations, tgt_language='spa_Latn')
 
+
+def similarity_comparison(x, y, w):
+
+  cosine = np.dot(x, y)/(np.linalg.norm(x)*np.linalg.norm(y))
+  print(cosine)
+  if cosine < w:
+    return 'in'
+  elif cosine > w:
+    return 'out'
