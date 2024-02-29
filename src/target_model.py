@@ -35,3 +35,35 @@ for epoch in range(3):
     loss.backward()
     optimizer.step()
     optimizer.zero_grad()
+
+
+
+    # Set model to evaluation mode
+model.eval()
+
+# Generate text from training dataset
+for batch in dataloader:
+  input_ids = batch["input_ids"].to(device)
+  input_ids = input_ids.to(device)
+
+    # Generate text
+  generated_text = model.generate(
+        input_ids=input_ids,
+        max_length=100,  # Adjust max length as needed
+        num_return_sequences=1,  # Number of sequences to generate per input
+        temperature=0.7,  # Adjust temperature for randomness
+        top_k=50,  # Adjust top_k for diversity
+        top_p=0.95,  # Adjust top_p for diversity
+        repetition_penalty=1.2,  # Adjust repetition penalty if needed
+        do_sample=True,  # Enable sampling
+        pad_token_id=tokenizer.eos_token_id,  # Specify end-of-sequence token
+        num_beams=1,  # Set num_beams to 1 for greedy search
+        no_repeat_ngram_size=2  # Adjust no_repeat_ngram_size to avoid repeating n-grams
+    )
+
+    # Decode generated text
+  decoded_text = [tokenizer.decode(tokens, skip_special_tokens=True) for tokens in generated_text]
+
+    # Print generated text
+  for text in decoded_text:
+      print(f"Generated Text:\n{text}\n")
