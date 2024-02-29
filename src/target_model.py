@@ -2,7 +2,7 @@ from transformers import GPT2Tokenizer, TFGPT2Model, GPT2LMHeadModel
 import torch
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
-
+import data
 
 class GPT2Dataset(Dataset):
   def __init__(self, dataframe):
@@ -18,7 +18,8 @@ class GPT2Dataset(Dataset):
     input_ids = encoding["input_ids"].squeeze()
     return {"input_ids": input_ids}
 
-dataset = GPT2Dataset(dataset1)
+dataframe = data.get_dataset()
+dataset = GPT2Dataset(dataframe)
 dataloader = DataLoader(dataset, shuffle=True)
 
 model = GPT2LMHeadModel.from_pretrained("gpt2")
