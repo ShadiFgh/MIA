@@ -18,28 +18,31 @@ class GPT2Dataset(Dataset):
     input_ids = encoding["input_ids"].squeeze()
     return {"input_ids": input_ids}
 
-dataframe = data.get_dataset()
-dataset = GPT2Dataset(dataframe)
-dataloader = DataLoader(dataset, shuffle=True)
+def trg_mdl_train():
+    
+    tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+    dataframe = data.get_dataset()
+    dataset = GPT2Dataset(dataframe)
+    dataloader = DataLoader(dataset, shuffle=True)
 
-model = GPT2LMHeadModel.from_pretrained("gpt2")
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
+    model = GPT2LMHeadModel.from_pretrained("gpt2")
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-model.to(device)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model.to(device)
 
-for epoch in range(3):
-  for batch in tqdm(dataloader):
-    input_ids = batch["input_ids"].to(device)
-    outputs = model(input_ids=input_ids, labels=input_ids)
-    loss = outputs.loss
-    loss.backward()
-    optimizer.step()
-    optimizer.zero_grad()
+    for epoch in range(3):
+      for batch in tqdm(dataloader):
+        input_ids = batch["input_ids"].to(device)
+        outputs = model(input_ids=input_ids, labels=input_ids)
+        loss = outputs.loss
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
 
 
 
-    # Set model to evaluation mode
+# Set model to evaluation mode
 model.eval()
 
 # Generate text from training dataset
@@ -47,7 +50,7 @@ for batch in dataloader:
   input_ids = batch["input_ids"].to(device)
   input_ids = input_ids.to(device)
 
-    # Generate text
+  # Generate text
   generated_text = model.generate(
         input_ids=input_ids,
         max_length=100,  # Adjust max length as needed
@@ -62,9 +65,9 @@ for batch in dataloader:
         no_repeat_ngram_size=2  # Adjust no_repeat_ngram_size to avoid repeating n-grams
     )
 
-    # Decode generated text
+  # Decode generated text
   decoded_text = [tokenizer.decode(tokens, skip_special_tokens=True) for tokens in generated_text]
 
-    # Print generated text
+  # Print generated text
   for text in decoded_text:
       print(f"Generated Text:\n{text}\n")
