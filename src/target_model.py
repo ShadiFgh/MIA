@@ -13,7 +13,7 @@ class GPT2Dataset(Dataset):
     return len(self.dataframe)
 
   def __getitem__(self, idx):
-    text = self.dataframe.iloc[idx]["text"]
+    text = self.dataframe.iloc[idx]
     encoding = self.tokenizer(text, return_tensors="pt")
     input_ids = encoding["input_ids"].squeeze()
     return {"input_ids": input_ids}
