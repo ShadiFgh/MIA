@@ -19,9 +19,9 @@ def generate_back_translations(text, tgt_language):
   return back_translated_text[0]['translation_text']
 
 
-def get_back_translations(dataset):
+def get_back_translations(dataset, target_lan):
 
-  return dataset.apply(generate_back_translations, tgt_language='spa_Latn')
+  return dataset.apply(generate_back_translations, tgt_language=target_lan)
 
 
 def similarity_comparison(x, y, w):

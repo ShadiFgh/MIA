@@ -13,7 +13,7 @@ dataframe = data.get_dataset()
 dataset = GPT2Dataset(dataframe['text'])
 dataloader = DataLoader(dataset, shuffle=True)
 
-back_tr_text = attack.get_back_translations(dataframe)
+back_tr_text = attack.get_back_translations(dataframe, 'spa_Latn')
 print(back_tr_text)
 
 target_model.trg_mdl_train(target_model=model, dataloader=dataloader)
