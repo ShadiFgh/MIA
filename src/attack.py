@@ -1,6 +1,7 @@
 import numpy as np
 from transformers import pipeline
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from sklearn.metrics.pairwise import cosine_similarity
 
 
 
@@ -26,7 +27,7 @@ def get_back_translations(dataset, target_lan):
 
 def similarity_comparison(x, y, w):
 
-  cosine = np.dot(x, y)/(np.linalg.norm(x)*np.linalg.norm(y))
+  cosine = cosine_similarity(x, y)
   print(cosine)
   if cosine < w:
     return 'in'

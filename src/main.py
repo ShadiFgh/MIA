@@ -11,7 +11,7 @@ model = GPT2LMHeadModel.from_pretrained("gpt2")
 tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
 dataframe = data.get_dataset()
 dataset = GPT2Dataset(dataframe['text'])
-dataloader = DataLoader(dataset, shuffle=True)
+dataloader = DataLoader(dataset, shuffle=False)
 
 back_tr_text = attack.get_back_translations(dataframe, 'spa_Latn')
 print(back_tr_text)
