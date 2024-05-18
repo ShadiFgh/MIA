@@ -1,5 +1,5 @@
 from sklearn.metrics import confusion_matrix
-from sklearn.metrics import roc_curve
+from sklearn.metrics import roc_curve, f1_score
 from sklearn.metrics import roc_auc_score
 import matplotlib.pyplot as plt
 
@@ -19,6 +19,10 @@ def evaluation_metrics(matrix_confusion):
       "accuracy": accuracy
   }
 
+def metrics(y_true, y_pred):
+  f1 = f1_score(y_true, y_pred)
+
+
 def roc_curve(y_true, y_pred):
   
   fpr, tpr, thresholds = roc_curve(y_true, y_pred)
@@ -30,3 +34,5 @@ def roc_curve(y_true, y_pred):
   plt.title('ROC Curve')
   plt.legend()
   plt.show()
+  print()
+  print('FPR = {}, TPR = {}'.format(fpr, tpr))
