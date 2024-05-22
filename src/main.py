@@ -41,8 +41,11 @@ dataloader = DataLoader(dataset_back_tr_3, shuffle=False, batch_size=1)
 generated_text_df['tr_3'], eval_loss_df['tr_3'], tokens_df['tr_3']  = target_model.generate_text(tg_model, dataloader, tokenizer)
 
 result = []
+loss_comparison = []
 for i in range(len(tokens_df)):
     x =tokens_df['original'][i]
+    loss_x = eval_loss_df['original'][i]
+    loss_y = np.mean([eval_loss_df['tr_1'][i], eval_loss_df['tr_2'][i], eval_loss_df['tr_3'][i]])
     max_length_y = max(tokens_df['tr_1'][i].shape[1], tokens_df['tr_2'][i].shape[1], tokens_df['tr_3'][i].shape[1])
 
     tokens_df['tr_1'][i] = np.pad(tokens_df['tr_1'][i][0], (0, abs(tokens_df['tr_1'][i].shape[1] - max_length_y)))
@@ -54,5 +57,7 @@ for i in range(len(tokens_df)):
     x = np.pad(x[0], (0, abs(x.shape[1] - max_length)))
     y = np.pad(y, (0, abs(y.shape[0] - max_length)))
     result.append(attack.similarity_comparison([x], [y], 0.4))
+    loss_comparison.append(attack.loss_difference(loss_x, loss_y, 0.1))
 
 print(result)
+print(loss_comparison)

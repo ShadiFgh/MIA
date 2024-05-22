@@ -32,3 +32,12 @@ def similarity_comparison(x, y, w):
     return 'in', cosine
   elif cosine > w:
     return 'out', cosine
+  
+
+def loss_difference(x, y, w):
+
+  difference = abs(x - y)
+  if difference < w:
+    return 'out', difference
+  elif difference > w:
+    return 'in', difference
