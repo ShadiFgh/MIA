@@ -5,7 +5,6 @@ from torch.utils.data import DataLoader
 from target_model import GPT2Dataset
 import target_model
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 
 
@@ -18,32 +17,45 @@ dataframe['back_tr_3'] = attack.get_back_translations(dataframe['back_tr_2'], 'd
 tg_model = GPT2LMHeadModel.from_pretrained("gpt2")
 tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
 dataset = GPT2Dataset(dataframe['text'][0:3])
-dataloader = DataLoader(dataset, shuffle=False)
+dataloader = DataLoader(dataset, shuffle=False, batch_size=1)
 
 target_model.trg_mdl_train(target_model=tg_model, dataloader=dataloader)
 
 dataset = GPT2Dataset(dataframe['text'])
 dataloader = DataLoader(dataset, shuffle=False)
 generated_text_df = pd.DataFrame()
-generated_text_df['original'] = target_model.generate_text(tg_model, dataloader, tokenizer)
+eval_loss_df = pd.DataFrame()
+tokens_df = pd.DataFrame()
+generated_text_df['original'], eval_loss_df['original'], tokens_df['original'] = target_model.generate_text(tg_model, dataloader, tokenizer)
 
 dataset_back_tr_1 = GPT2Dataset(dataframe['back_tr_1'])
-dataloader = DataLoader(dataset_back_tr_1, shuffle=False)
-generated_text_df['tr_1'] = target_model.generate_text(tg_model, dataloader, tokenizer)
+dataloader = DataLoader(dataset_back_tr_1, shuffle=False, batch_size=1)
+generated_text_df['tr_1'], eval_loss_df['tr_1'], tokens_df['tr_1']  = target_model.generate_text(tg_model, dataloader, tokenizer)
 
 dataset_back_tr_2 = GPT2Dataset(dataframe['back_tr_2'])
-dataloader = DataLoader(dataset_back_tr_2, shuffle=False)
-generated_text_df['tr_2'] = target_model.generate_text(tg_model, dataloader, tokenizer)
+dataloader = DataLoader(dataset_back_tr_2, shuffle=False, batch_size=1)
+generated_text_df['tr_2'], eval_loss_df['tr_2'], tokens_df['tr_2'] = target_model.generate_text(tg_model, dataloader, tokenizer)
 
 dataset_back_tr_3 = GPT2Dataset(dataframe['back_tr_3'])
-dataloader = DataLoader(dataset_back_tr_3, shuffle=False)
-generated_text_df['tr_3'] = target_model.generate_text(tg_model, dataloader, tokenizer)
+dataloader = DataLoader(dataset_back_tr_3, shuffle=False, batch_size=1)
+generated_text_df['tr_3'], eval_loss_df['tr_3'], tokens_df['tr_3']  = target_model.generate_text(tg_model, dataloader, tokenizer)
 
-vectorizer = TfidfVectorizer()
-for i in range(len(generated_text_df)):
-    x = vectorizer.fit_transform([generated_text_df['original'][i]])
-    y_corpus = []
-    for col in ['tr_1', 'tr_2', 'tr_3']:
-        y_corpus.append(generated_text_df.loc[i, col])
-    y = np.mean(vectorizer.transform(y_corpus).toarray(), axis=0)
-    print(attack.similarity_comparison(x, y.reshape(1, -1), 0.1))
+
+for i in range(len(tokens_df)):
+    x =tokens_df['original'][i]
+    max_length_y = max(len(tokens_df['tr_1'][i]), len(tokens_df['tr_2'][i]), len(tokens_df['tr_3'][i]))
+    tokens_df['tr_1'][i] = np.pad(tokens_df['tr_1'][i], (0, abs(len(tokens_df['tr_1'][i]) - max_length_y)))
+    tokens_df['tr_2'][i] = np.pad(tokens_df['tr_2'][i], (0, abs(len(tokens_df['tr_2'][i]) - max_length_y)))
+    tokens_df['tr_3'][i] = np.pad(tokens_df['tr_3'][i], (0, abs(len(tokens_df['tr_3'][i]) - max_length_y)))
+    print(tokens_df['tr_1'][i])
+    print(tokens_df['tr_1'][i].shape)
+    print(tokens_df['tr_2'][i])
+    print(tokens_df['tr_2'][i].shape)
+    print(tokens_df['tr_3'][i])
+    print(tokens_df['tr_3'][i].shape)
+    y = np.mean([tokens_df['tr_1'][i], tokens_df['tr_2'][i], tokens_df['tr_3'][i]], axis=0)
+    print(y)
+    max_length = max(len(x), len(y))
+    x = np.pad(x, (0, abs(x - max_length)))
+    y = np.pad(y, (0, abs(y - max_length)))
+    print(attack.similarity_comparison(x, y, 0.74))
