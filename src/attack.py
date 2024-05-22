@@ -28,8 +28,7 @@ def get_back_translations(dataset, target_lan):
 def similarity_comparison(x, y, w):
 
   cosine = cosine_similarity(x, y)
-  print(cosine)
   if cosine < w:
-    return 'in'
+    return 'in', cosine
   elif cosine > w:
-    return 'out'
+    return 'out', cosine
