@@ -93,7 +93,7 @@ def generate_text(model, dataloader, tokenizer):
             decoded_text = [tokenizer.decode(tokens, skip_special_tokens=True) for tokens in generated_text] 
             all_generated_text.append(decoded_text) 
             all_tokens.append(generated_text)
-            print(generated_text)
+            
             # Print generated text 
             for text in decoded_text: 
                 print(f"Generated Text:\n{text}\n") 

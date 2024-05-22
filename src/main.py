@@ -43,19 +43,14 @@ generated_text_df['tr_3'], eval_loss_df['tr_3'], tokens_df['tr_3']  = target_mod
 
 for i in range(len(tokens_df)):
     x =tokens_df['original'][i]
-    max_length_y = max(len(tokens_df['tr_1'][i]), len(tokens_df['tr_2'][i]), len(tokens_df['tr_3'][i]))
-    tokens_df['tr_1'][i] = np.pad(tokens_df['tr_1'][i], (0, abs(len(tokens_df['tr_1'][i]) - max_length_y)))
-    tokens_df['tr_2'][i] = np.pad(tokens_df['tr_2'][i], (0, abs(len(tokens_df['tr_2'][i]) - max_length_y)))
-    tokens_df['tr_3'][i] = np.pad(tokens_df['tr_3'][i], (0, abs(len(tokens_df['tr_3'][i]) - max_length_y)))
-    print(tokens_df['tr_1'][i])
-    print(tokens_df['tr_1'][i].shape)
-    print(tokens_df['tr_2'][i])
-    print(tokens_df['tr_2'][i].shape)
-    print(tokens_df['tr_3'][i])
-    print(tokens_df['tr_3'][i].shape)
+    max_length_y = max(tokens_df['tr_1'][i].shape[1], tokens_df['tr_2'][i].shape[1], tokens_df['tr_3'][i].shape[1])
+
+    tokens_df['tr_1'][i] = np.pad(tokens_df['tr_1'][i][0], (0, abs(tokens_df['tr_1'][i].shape[1] - max_length_y)))
+    tokens_df['tr_2'][i] = np.pad(tokens_df['tr_2'][i][0], (0, abs(tokens_df['tr_2'][i].shape[1] - max_length_y)))
+    tokens_df['tr_3'][i] = np.pad(tokens_df['tr_3'][i][0], (0, abs(tokens_df['tr_3'][i].shape[1] - max_length_y)))
+
     y = np.mean([tokens_df['tr_1'][i], tokens_df['tr_2'][i], tokens_df['tr_3'][i]], axis=0)
-    print(y)
-    max_length = max(len(x), len(y))
-    x = np.pad(x, (0, abs(x - max_length)))
-    y = np.pad(y, (0, abs(y - max_length)))
-    print(attack.similarity_comparison(x, y, 0.74))
+    max_length = max(x.shape[1], y.shape[0])
+    x = np.pad(x[0], (0, abs(x.shape[1] - max_length)))
+    y = np.pad(y, (0, abs(y.shape[0] - max_length)))
+    print(attack.similarity_comparison([x], [y], 0.74))
