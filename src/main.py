@@ -67,10 +67,10 @@ for i in range(len(tokens_df)):
 print(result)
 print(loss_comparison)
 
-y_true = dataframe['y_true']
-y_pred = result[0][:]
+y_true = dataframe['y_true'].tolist()
+y_pred = [tup[0] for tup in result]
 print(y_pred)
-y_true = dataframe['y_true']
+print(y_true)
 
 print()
 print(eval.evaluation_metrics(y_true, y_pred))

@@ -5,14 +5,14 @@ import matplotlib.pyplot as plt
 
 def evaluation_metrics(y_true, y_pred):
   
-  tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+  tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=['in', 'out']).ravel()
 
   PPV = tp/(tp+fp)
   NPV = tn/(fn+tn)
   sensitivity = tp/(tp+fn)
   specificity = tn/(tn+fp)
   accuracy = (tp+tn)/(tp+fp+fn+tn)
-  f1 = f1_score(y_true, y_pred)
+  f1 = f1_score(y_true, y_pred, pos_label='in')
   return {
       "PPV": PPV,
       "NPV": NPV,
