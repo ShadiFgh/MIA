@@ -1,5 +1,6 @@
 import attack
 import data
+import eval
 from transformers import GPT2Tokenizer, GPT2LMHeadModel
 from torch.utils.data import DataLoader
 from target_model import GPT2Dataset
@@ -8,7 +9,11 @@ import pandas as pd
 import numpy as np
 
 
-dataframe = data.get_dataset()
+dataframe_train, dataframe_test = data.get_dataset()
+dataframe_train['y_true'] = 'in'
+dataframe_test['y_true'] = 'out'
+dataframe = pd.concat([dataframe_train, dataframe_test], ignore_index=True)
+
 dataframe['back_tr_1'] = attack.get_back_translations(dataframe['text'], 'spa_Latn')
 dataframe['back_tr_2'] = attack.get_back_translations(dataframe['back_tr_1'], 'fra_Latn')
 dataframe['back_tr_3'] = attack.get_back_translations(dataframe['back_tr_2'], 'deu_Latn')
@@ -16,7 +21,7 @@ dataframe['back_tr_3'] = attack.get_back_translations(dataframe['back_tr_2'], 'd
 
 tg_model = GPT2LMHeadModel.from_pretrained("gpt2")
 tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-dataset = GPT2Dataset(dataframe['text'][0:3])
+dataset = GPT2Dataset(dataframe_train['text'])
 dataloader = DataLoader(dataset, shuffle=False, batch_size=1)
 
 target_model.trg_mdl_train(target_model=tg_model, dataloader=dataloader)
@@ -61,3 +66,11 @@ for i in range(len(tokens_df)):
 
 print(result)
 print(loss_comparison)
+
+y_true = dataframe['y_true']
+y_pred = result[0][:]
+print(y_pred)
+y_true = dataframe['y_true']
+
+print()
+print(eval.evaluation_metrics(y_true, y_pred))
