@@ -27,7 +27,7 @@ def roc_curve(y_true, y_pred):
   
   fpr, tpr, thresholds = roc_curve(y_true, y_pred)
   auc = roc_auc_score(y_true, y_pred)
-  plt.figure(figsize=(6, 6))
+  plt.figure()
   plt.plot(fpr,tpr,label= f"AUC={auc}")
   plt.xlabel('False Positive Rate')
   plt.ylabel('True Positive Rate')

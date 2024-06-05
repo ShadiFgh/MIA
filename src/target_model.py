@@ -28,7 +28,7 @@ def trg_mdl_train(target_model, dataloader):
     model.to(device) 
 
     model.train()  # Set the model to training mode
-    for epoch in range(20): 
+    for epoch in range(30): 
         epoch_loss = 0  # To track the total loss for the epoch
         for batch in tqdm(dataloader, desc=f"Training Epoch {epoch+1}"): 
             input_ids = batch["input_ids"].to(device) 

@@ -45,6 +45,11 @@ dataset_back_tr_3 = GPT2Dataset(dataframe['back_tr_3'])
 dataloader = DataLoader(dataset_back_tr_3, shuffle=False, batch_size=1)
 generated_text_df['tr_3'], eval_loss_df['tr_3'], tokens_df['tr_3']  = target_model.generate_text(tg_model, dataloader, tokenizer)
 
+dataframe.to_csv('dataframe.csv', mode='a', index=False, header=True)
+generated_text_df.to_csv('generated_text_df.csv', mode='a', index=False, header=True)
+tokens_df.to_csv('tokens_df.csv', mode='a', index=False, header=True)
+eval_loss_df.to_csv('eval_loss.csv', mode='a', index=False, header=True)
+
 result = []
 loss_comparison = []
 for i in range(len(tokens_df)):
@@ -74,3 +79,6 @@ print(y_true)
 
 print()
 print(eval.evaluation_metrics(y_true, y_pred))
+print()
+
+# eval.roc_curve(y_true, y_pred)
