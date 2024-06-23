@@ -7,9 +7,23 @@ from target_model import GPT2Dataset
 import target_model
 import pandas as pd
 import numpy as np
+import sys
 
+if len(sys.argv[1]) > 1:
+    if str(sys.argv[1]).lower().strip() == "testing":
+        dataset_size = 3
+    else:
+        try:
+            dataset_size = int(sys.argv[1])
+        except:
+            print("Failed to parse number of lines of dataset you want to use!")
+            print("Example for testing that is 3 lines for default, Use like: python main.py testing")
+            print("Example for using 981 lines, Use like: python main.py 981")
+            sys.exit()
+    dataframe_train, dataframe_test = data.get_dataset(num_lines = dataset_size)
+else:
+    dataframe_train, dataframe_test = data.get_dataset()
 
-dataframe_train, dataframe_test = data.get_dataset()
 dataframe_train['y_true'] = 'in'
 dataframe_test['y_true'] = 'out'
 dataframe = pd.concat([dataframe_train, dataframe_test], ignore_index=True)
@@ -45,10 +59,10 @@ dataset_back_tr_3 = GPT2Dataset(dataframe['back_tr_3'])
 dataloader = DataLoader(dataset_back_tr_3, shuffle=False, batch_size=1)
 generated_text_df['tr_3'], eval_loss_df['tr_3'], tokens_df['tr_3']  = target_model.generate_text(tg_model, dataloader, tokenizer)
 
-dataframe.to_csv('dataframe.csv', mode='a', index=False, header=True)
-generated_text_df.to_csv('generated_text_df.csv', mode='a', index=False, header=True)
-tokens_df.to_csv('tokens_df.csv', mode='a', index=False, header=True)
-eval_loss_df.to_csv('eval_loss.csv', mode='a', index=False, header=True)
+# dataframe.to_csv('dataframe.csv', mode='a', index=False, header=True)
+# generated_text_df.to_csv('generated_text_df.csv', mode='a', index=False, header=True)
+# tokens_df.to_csv('tokens_df.csv', mode='a', index=False, header=True)
+# eval_loss_df.to_csv('eval_loss.csv', mode='a', index=False, header=True)
 
 result = []
 loss_comparison = []
@@ -80,5 +94,12 @@ print(y_true)
 print()
 print(eval.evaluation_metrics(y_true, y_pred))
 print()
+y_pred_loss = [tup[0] for tup in loss_comparison]
+print(y_pred_loss)
+print(y_true)
 
-# eval.roc_curve(y_true, y_pred)
+print()
+print(eval.evaluation_metrics(y_true, y_pred_loss))
+print()
+
+eval.eval_roc_curve(y_true, y_pred)

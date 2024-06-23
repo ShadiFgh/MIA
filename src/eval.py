@@ -23,9 +23,9 @@ def evaluation_metrics(y_true, y_pred):
   }
 
 
-def roc_curve(y_true, y_pred):
+def eval_roc_curve(y_true, y_pred):
   
-  fpr, tpr, thresholds = roc_curve(y_true, y_pred)
+  fpr, tpr, thresholds = roc_curve(y_true, y_pred, pos_label='in')
   auc = roc_auc_score(y_true, y_pred)
   plt.figure()
   plt.plot(fpr,tpr,label= f"AUC={auc}")

@@ -28,7 +28,7 @@ def trg_mdl_train(target_model, dataloader):
     model.to(device) 
 
     model.train()  # Set the model to training mode
-    for epoch in range(30): 
+    for epoch in range(40): 
         epoch_loss = 0  # To track the total loss for the epoch
         for batch in tqdm(dataloader, desc=f"Training Epoch {epoch+1}"): 
             input_ids = batch["input_ids"].to(device) 
@@ -69,7 +69,8 @@ def generate_text(model, dataloader, tokenizer):
             # Generate text 
             generated_text = model.generate( 
                 input_ids=input_ids, 
-                max_length=100,  # Adjust max length as needed 
+                max_length=2000,  # Adjust max length is input + output
+                max_new_tokens=200, # Max output tokens
                 num_return_sequences=1,  # Number of sequences to generate per input 
                 temperature=0.7,  # Adjust temperature for randomness 
                 top_k=50,  # Adjust top_k for diversity 
