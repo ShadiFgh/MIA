@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 import sys
 
-if len(sys.argv[1]) > 1:
+if len(sys.argv) > 1:
     if str(sys.argv[1]).lower().strip() == "testing":
         dataset_size = 3
     else:
