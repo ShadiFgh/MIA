@@ -20,6 +20,10 @@
 
         pip install -r requirements.txt
 
+        module load gcc
+
+        module load arrow
+
 
 ## Usage
 
