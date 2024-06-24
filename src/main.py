@@ -8,6 +8,7 @@ import target_model
 import pandas as pd
 import numpy as np
 import sys
+import torch
 
 if len(sys.argv) > 1:
     if str(sys.argv[1]).lower().strip() == "testing":
@@ -33,8 +34,8 @@ dataframe['back_tr_2'] = attack.get_back_translations(dataframe['back_tr_1'], 'f
 dataframe['back_tr_3'] = attack.get_back_translations(dataframe['back_tr_2'], 'deu_Latn')
 
 
-tg_model = GPT2LMHeadModel.from_pretrained("gpt2")
-tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+tg_model = GPT2LMHeadModel.from_pretrained("gpt2", device_map="auto", torch_dtype=torch.float16)
+tokenizer = GPT2Tokenizer.from_pretrained("gpt2", device_map="auto", torch_dtype=torch.float16)
 dataset = GPT2Dataset(dataframe_train['text'])
 dataloader = DataLoader(dataset, shuffle=False, batch_size=1)
 
