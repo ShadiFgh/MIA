@@ -24,8 +24,8 @@ if len(sys.argv[1]) > 1:
 else:
     dataframe_train, dataframe_test = data.get_dataset()
 
-dataframe_train['y_true'] = 'in'
-dataframe_test['y_true'] = 'out'
+dataframe_train['y_true'] = 1
+dataframe_test['y_true'] = 0
 dataframe = pd.concat([dataframe_train, dataframe_test], ignore_index=True)
 
 dataframe['back_tr_1'] = attack.get_back_translations(dataframe['text'], 'spa_Latn')

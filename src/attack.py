@@ -29,15 +29,15 @@ def similarity_comparison(x, y, w):
 
   cosine = cosine_similarity(x, y)
   if cosine < w:
-    return 'in', cosine
+    return 1, cosine
   elif cosine > w:
-    return 'out', cosine
+    return 0, cosine
   
 
 def loss_difference(x, y, w):
 
   difference = x - y
   if difference < w:
-    return 'in', difference
+    return 1, difference
   elif difference > w:
-    return 'out', difference
+    return 0, difference
