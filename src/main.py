@@ -10,7 +10,14 @@ import numpy as np
 import sys
 import torch
 
+device_type = 'cpu' # cuda or cpu
+device_id = 0
+
 if len(sys.argv) > 1:
+    if len(sys.argv) > 2:
+        device_type = sys.argv[2].lower().strip()
+    if len(sys.argv) == 4:
+        device_id = int(sys.argv[3].lower().strip())
     if str(sys.argv[1]).lower().strip() == "testing":
         dataset_size = 3
     else:
@@ -25,40 +32,75 @@ if len(sys.argv) > 1:
 else:
     dataframe_train, dataframe_test = data.get_dataset()
 
+# List of available devices in array
+devices = [torch.device(f"cuda:{i}") for i in range(torch.cuda.device_count())]
+device = None
+if device_type == "cpu":
+    device = torch.device("cpu")
+else:
+    if torch.cuda.is_available():
+        if device_id >= len(devices):
+            print(f"CUDA available but the Device with ID {device_id} is not available. Using the last available device.")
+            device_id = -1
+        device = devices[device_id]
+    else:
+        print("CUDA is not available. Using CPU instead.")
+        device = torch.device("cpu")
+
 dataframe_train['y_true'] = 1
 dataframe_test['y_true'] = 0
 dataframe = pd.concat([dataframe_train, dataframe_test], ignore_index=True)
 
-dataframe['back_tr_1'] = attack.get_back_translations(dataframe['text'], 'spa_Latn')
-dataframe['back_tr_2'] = attack.get_back_translations(dataframe['back_tr_1'], 'fra_Latn')
-dataframe['back_tr_3'] = attack.get_back_translations(dataframe['back_tr_2'], 'deu_Latn')
+dataframe['back_tr_1'] = attack.get_back_translations(dataframe['text'], 'spa_Latn', device=device)
+dataframe['back_tr_2'] = attack.get_back_translations(dataframe['back_tr_1'], 'fra_Latn', device=device)
+dataframe['back_tr_3'] = attack.get_back_translations(dataframe['back_tr_2'], 'deu_Latn', device=device)
 
 
-tg_model = GPT2LMHeadModel.from_pretrained("gpt2", device_map="auto", torch_dtype=torch.float16)
-tokenizer = GPT2Tokenizer.from_pretrained("gpt2", device_map="auto", torch_dtype=torch.float16)
+# Initialize the model and tokenizer
+tg_model = GPT2LMHeadModel.from_pretrained("gpt2", torch_dtype=torch.float32)
+tg_model.to(device)
+tokenizer = GPT2Tokenizer.from_pretrained("gpt2", torch_dtype=torch.float32)
+
+# Assuming you have a dataset class `GPT2Dataset`
 dataset = GPT2Dataset(dataframe_train['text'])
 dataloader = DataLoader(dataset, shuffle=False, batch_size=1)
 
-target_model.trg_mdl_train(target_model=tg_model, dataloader=dataloader)
+# Train the model
+target_model.trg_mdl_train(target_model=tg_model, dataloader=dataloader, device=device)
+
+# tg_model = GPT2LMHeadModel.from_pretrained("gpt2", torch_dtype=torch.float16)
+# tokenizer = GPT2Tokenizer.from_pretrained("gpt2", torch_dtype=torch.float16)
 
 dataset = GPT2Dataset(dataframe['text'])
 dataloader = DataLoader(dataset, shuffle=False)
 generated_text_df = pd.DataFrame()
 eval_loss_df = pd.DataFrame()
 tokens_df = pd.DataFrame()
-generated_text_df['original'], eval_loss_df['original'], tokens_df['original'] = target_model.generate_text(tg_model, dataloader, tokenizer)
+resp = target_model.generate_text(tg_model, dataloader, tokenizer, device=device)
+generated_text_df['original'] = resp[0]
+eval_loss_df['original'] = [ten.cpu().numpy() for ten in resp[1]]
+tokens_df['original'] = [ten.cpu().numpy() for ten in resp[2]]
 
 dataset_back_tr_1 = GPT2Dataset(dataframe['back_tr_1'])
 dataloader = DataLoader(dataset_back_tr_1, shuffle=False, batch_size=1)
-generated_text_df['tr_1'], eval_loss_df['tr_1'], tokens_df['tr_1']  = target_model.generate_text(tg_model, dataloader, tokenizer)
+resp2= target_model.generate_text(tg_model, dataloader, tokenizer, device=device)
+generated_text_df['tr_1'] = resp2[0]
+eval_loss_df['tr_1'] = [ten.cpu().numpy() for ten in resp2[1]]
+tokens_df['tr_1'] = [ten.cpu().numpy() for ten in resp2[2]]
 
 dataset_back_tr_2 = GPT2Dataset(dataframe['back_tr_2'])
 dataloader = DataLoader(dataset_back_tr_2, shuffle=False, batch_size=1)
-generated_text_df['tr_2'], eval_loss_df['tr_2'], tokens_df['tr_2'] = target_model.generate_text(tg_model, dataloader, tokenizer)
+resp3= target_model.generate_text(tg_model, dataloader, tokenizer, device=device)
+generated_text_df['tr_2'] = resp3[0]
+eval_loss_df['tr_2'] = [ten.cpu().numpy() for ten in resp3[1]]
+tokens_df['tr_2'] = [ten.cpu().numpy() for ten in resp3[2]]
 
 dataset_back_tr_3 = GPT2Dataset(dataframe['back_tr_3'])
 dataloader = DataLoader(dataset_back_tr_3, shuffle=False, batch_size=1)
-generated_text_df['tr_3'], eval_loss_df['tr_3'], tokens_df['tr_3']  = target_model.generate_text(tg_model, dataloader, tokenizer)
+resp4= target_model.generate_text(tg_model, dataloader, tokenizer, device=device)
+generated_text_df['tr_3'] = resp4[0]
+eval_loss_df['tr_3'] = [ten.cpu().numpy() for ten in resp4[1]]
+tokens_df['tr_3'] = [ten.cpu().numpy() for ten in resp4[2]]
 
 dataframe.to_csv('dataframe.csv', mode='a', index=False, header=True)
 dataframe_train.to_csv('dataframe_train.csv', mode='a', index=False, header=True)
@@ -105,4 +147,4 @@ print()
 print(eval.evaluation_metrics(y_true, y_pred_loss))
 print()
 
-eval.eval_roc_curve(y_true, y_pred)
+eval.eval_roc_curve(y_true, y_pred_loss)

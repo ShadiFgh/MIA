@@ -2,13 +2,14 @@ import numpy as np
 from transformers import pipeline
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from sklearn.metrics.pairwise import cosine_similarity
+import torch
 
 
-
-def generate_back_translations(text, tgt_language):
+def generate_back_translations(text, tgt_language, device=torch.device('cpu')):
 
   checkpoint = 'facebook/nllb-200-distilled-600M'
   model=AutoModelForSeq2SeqLM.from_pretrained(checkpoint)
+  model.to(device)
   tokenizer=AutoTokenizer.from_pretrained(checkpoint)
 
   translator = pipeline("translation", model=model, tokenizer=tokenizer, src_lang='eng_Latn', tgt_lang=tgt_language, max_length=400)
@@ -20,9 +21,8 @@ def generate_back_translations(text, tgt_language):
   return back_translated_text[0]['translation_text']
 
 
-def get_back_translations(dataset, target_lan):
-
-  return dataset.apply(generate_back_translations, tgt_language=target_lan)
+def get_back_translations(dataset, target_lan, device=torch.device('cpu')):
+  return dataset.apply(generate_back_translations, tgt_language=target_lan, device=device)
 
 
 def similarity_comparison(x, y, w):

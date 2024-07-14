@@ -18,40 +18,81 @@ class GPT2Dataset(Dataset):
     input_ids = encoding["input_ids"].squeeze()
     return {"input_ids": input_ids}
 
-def trg_mdl_train(target_model, dataloader): 
-    # Load the target model
-    # model = GPT2LMHeadModel.from_pretrained(target_model) 
-    model = target_model
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-5) 
+# def trg_mdl_train(target_model, dataloader, device=torch.device('cpu')): 
+#     # Load the target model
+#     # model = GPT2LMHeadModel.from_pretrained(target_model) 
+#     model = target_model
+#     optimizer = torch.optim.Adam(model.parameters(), lr=1e-5) 
 
-    device = "cuda" if torch.cuda.is_available() else "cpu" 
-    model.to(device) 
+#     model.train()  # Set the model to training mode
+#     for epoch in range(40): 
+#         epoch_loss = 0  # To track the total loss for the epoch
+#         for batch in tqdm(dataloader, desc=f"Training Epoch {epoch+1}"): 
+#             input_ids = batch["input_ids"].to(device) 
+#             optimizer.zero_grad() 
+#             outputs = model(input_ids=input_ids, labels=input_ids) 
+#             loss = outputs.loss 
+#             loss.backward()  # Backpropagate the gradients
+#             optimizer.step() 
+            
+#             epoch_loss += loss.item()  # Accumulate the loss
+#             tqdm.write(f"Batch loss: {loss.item():.4f}")  # Optionally print the loss for each batch
+        
+#         avg_loss = epoch_loss / len(dataloader)  # Calculate the average loss for the epoch
+#         tqdm.write(f"Epoch {epoch+1} Average Loss: {avg_loss:.4f}")  # Print the average loss for the epoch
+
+
+import torch
+from tqdm import tqdm
+
+def trg_mdl_train(target_model, dataloader, device=torch.device('cpu')):
+    # Load the target model
+    model = target_model
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
 
     model.train()  # Set the model to training mode
-    for epoch in range(40): 
+    for epoch in range(40):
         epoch_loss = 0  # To track the total loss for the epoch
-        for batch in tqdm(dataloader, desc=f"Training Epoch {epoch+1}"): 
-            input_ids = batch["input_ids"].to(device) 
-            optimizer.zero_grad() 
-            outputs = model(input_ids=input_ids, labels=input_ids) 
-            loss = outputs.loss 
-            loss.backward()  # Backpropagate the gradients
-            optimizer.step() 
-            
-            epoch_loss += loss.item()  # Accumulate the loss
+        for batch in tqdm(dataloader, desc=f"Training Epoch {epoch+1}"):
+            input_ids = batch["input_ids"].to(device)
+
+            # Zero gradients
+            optimizer.zero_grad()
+
+            # Forward pass
+            outputs = model(input_ids=input_ids, labels=input_ids)
+            loss = outputs.loss
+
+            # Check for NaN values in the loss
+            if torch.isnan(loss):
+                print("NaN loss encountered")
+                continue
+
+            # Backward pass
+            loss.backward()
+
+            # Gradient clipping
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+
+            # Optimization step
+            optimizer.step()
+
+            # Accumulate the loss
+            epoch_loss += loss.item()
             tqdm.write(f"Batch loss: {loss.item():.4f}")  # Optionally print the loss for each batch
-        
+
         avg_loss = epoch_loss / len(dataloader)  # Calculate the average loss for the epoch
         tqdm.write(f"Epoch {epoch+1} Average Loss: {avg_loss:.4f}")  # Print the average loss for the epoch
+
+
 
 
 import torch
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 
-def generate_text(model, dataloader, tokenizer): 
+def generate_text(model, dataloader, tokenizer, device=torch.device('cpu')): 
     # Set model to evaluation mode 
-    model.eval() 
-    device = "cuda" if torch.cuda.is_available() else "cpu" 
+    model.eval()
     model.to(device)
     
     all_generated_text = [] 
