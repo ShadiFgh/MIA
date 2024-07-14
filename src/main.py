@@ -128,20 +128,21 @@ for i in range(len(tokens_df)):
     result.append(attack.similarity_comparison([x], [y], 0.4))
     loss_comparison.append(attack.loss_difference(loss_x, loss_y, 0.1))
 
-# print(result)
+print("Cosine Similarity")
+print(result)
 # print(loss_comparison)
 
 y_true = dataframe['y_true'].tolist()
 y_pred = [tup[0] for tup in result]
-# print(y_pred)
-# print(y_true)
+print("y pred for Cosine Similarity", y_pred)
+print("y true for Cosine Similarity", y_true)
 
 print()
 print(eval.evaluation_metrics(y_true, y_pred))
 print()
 y_pred_loss = [tup[0] for tup in loss_comparison]
-print(y_pred_loss)
-print(y_true)
+print("y pred for loss comparison", y_pred_loss)
+print("y pred for loss comparison", y_true)
 
 print()
 print(eval.evaluation_metrics(y_true, y_pred_loss))
