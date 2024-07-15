@@ -9,6 +9,9 @@ import pandas as pd
 import numpy as np
 import sys
 import torch
+import time
+
+start_time = time.time()
 
 device_type = 'cpu' # cuda or cpu
 device_id = 0
@@ -155,3 +158,6 @@ tpr_at_2_fpr, tpr_at_5_fpr, tpr_at_10_fpr = eval.calculate_tpr_at_fpr(y_true, y_
 print(f"TPR at 2% FPR: {tpr_at_2_fpr}")
 print(f"TPR at 5% FPR: {tpr_at_5_fpr}")
 print(f"TPR at 10% FPR: {tpr_at_10_fpr}")
+
+end_time = time.time()
+print(f"Execution time: {(end_time - start_time)/60} minutes")
