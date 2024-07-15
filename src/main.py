@@ -125,12 +125,13 @@ for i in range(len(tokens_df)):
     max_length = max(x.shape[1], y.shape[0])
     x = np.pad(x[0], (0, abs(x.shape[1] - max_length)))
     y = np.pad(y, (0, abs(y.shape[0] - max_length)))
-    result.append(attack.similarity_comparison([x], [y], 0.4))
+    result.append(attack.similarity_comparison([x], [y], 0.38))
     loss_comparison.append(attack.loss_difference(loss_x, loss_y, 0.1))
 
 print("Cosine Similarity")
 print(result)
-# print(loss_comparison)
+print("Loss Comparison")
+print(loss_comparison)
 
 y_true = dataframe['y_true'].tolist()
 y_pred = [tup[0] for tup in result]
@@ -142,10 +143,15 @@ print(eval.evaluation_metrics(y_true, y_pred))
 print()
 y_pred_loss = [tup[0] for tup in loss_comparison]
 print("y pred for loss comparison", y_pred_loss)
-print("y pred for loss comparison", y_true)
+print("y true for loss comparison", y_true)
 
 print()
 print(eval.evaluation_metrics(y_true, y_pred_loss))
 print()
 
 eval.eval_roc_curve(y_true, y_pred_loss)
+
+tpr_at_2_fpr, tpr_at_5_fpr, tpr_at_10_fpr = eval.calculate_tpr_at_fpr(y_true, y_pred_loss)
+print(f"TPR at 2% FPR: {tpr_at_2_fpr}")
+print(f"TPR at 5% FPR: {tpr_at_5_fpr}")
+print(f"TPR at 10% FPR: {tpr_at_10_fpr}")

@@ -17,9 +17,9 @@ def evaluation_metrics(y_true, y_pred):
   accuracy = (tp+tn)/(tp+fp+fn+tn)
   f1 = f1_score(y_true, y_pred, pos_label=1)
   return {
-      "PPV": PPV,
+      "Precision (Positive Predictive Value, PPV)": PPV,
       "NPV": NPV,
-      "sensitivity": sensitivity,
+      "Recall or Sensitivity": sensitivity,
       "specificity": specificity,
       "accuracy": accuracy,
       "f1 score": f1
@@ -42,38 +42,18 @@ def eval_roc_curve(y_true, y_pred):
   print()
   print('AUC = {}'.format(auc))
 
-  def evaluate_tpr_fpr_precision_recall_at_fixed_fpr(y_true, y_pred, fixed_fpr=0.01):
-    """
-    Evaluate TPR and Precision and Recall at a fixed FPR.
 
-    Parameters:
-    y_true (array-like): True binary labels (0 or 1).
-    y_pred (array-like): Scores or probabilities for the positive class.
-    fixed_fpr (float): The fixed false positive rate threshold.
+# Function to interpolate TPR at specific FPR
+def interpolate_tpr(fpr, tpr, target_fpr):
+        return np.interp(target_fpr, fpr, tpr)
 
-    Returns:
-    dict: Dictionary containing TPR, Precision, and Recall at the fixed FPR.
-    """
-    # Calculate ROC curve
-    fpr, tpr, thresholds_roc = roc_curve(y_true, y_pred)
 
-    # Find the threshold for the fixed FPR
-    threshold_index = np.where(fpr >= fixed_fpr)[0][0]
-    threshold = thresholds_roc[threshold_index]
+def calculate_tpr_at_fpr(y_true, y_pred):
+    # Compute ROC curve
+    fpr, tpr, thresholds = roc_curve(y_true, y_pred)
+    # TPR at 2%, 5%, and 10% FPR
+    tpr_at_2_fpr = interpolate_tpr(fpr, tpr, 0.02)
+    tpr_at_5_fpr = interpolate_tpr(fpr, tpr, 0.05)
+    tpr_at_10_fpr = interpolate_tpr(fpr, tpr, 0.10)
 
-    # Calculate Precision-Recall curve
-    precision, recall, thresholds_pr = precision_recall_curve(y_true, y_pred)
-
-    # Find the closest threshold in the PR curve to the ROC threshold
-    pr_threshold_index = np.argmin(np.abs(thresholds_pr - threshold))
-
-    # Extract the TPR, Precision, and Recall at the fixed FPR threshold
-    tpr_at_fixed_fpr = tpr[threshold_index]
-    precision_at_fixed_fpr = precision[pr_threshold_index]
-    recall_at_fixed_fpr = recall[pr_threshold_index]
-
-    return {
-        'TPR_at_fixed_FPR': tpr_at_fixed_fpr,
-        'Precision_at_fixed_FPR': precision_at_fixed_fpr,
-        'Recall_at_fixed_FPR': recall_at_fixed_fpr
-    }
+    return tpr_at_2_fpr, tpr_at_5_fpr, tpr_at_10_fpr
