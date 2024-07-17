@@ -10,11 +10,30 @@ import numpy as np
 import sys
 import torch
 import time
-
-start_time = time.time()
+import pickle
+import os
 
 device_type = 'cpu' # cuda or cpu
 device_id = 0
+
+LOAD_DATA_FRAME = False
+LOAD_MODEL = False
+
+# Empty Output File
+with open('output.txt', 'w') as f:
+    f.write('')
+
+def printTextShadi(*args, **kwargs):
+    with open('output.txt', 'a') as f:
+        for arg in args:
+            print(arg)
+            f.write(f"{arg}\n")
+        for key, value in kwargs.items():
+            print(f"{key}: {value}")
+            f.write(f"{key}: {value}\n")
+
+start_time = time.time()
+printTextShadi(f'Started Program at {time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}')
 
 if len(sys.argv) > 1:
     if len(sys.argv) > 2:
@@ -27,9 +46,9 @@ if len(sys.argv) > 1:
         try:
             dataset_size = int(sys.argv[1])
         except:
-            print("Failed to parse number of lines of dataset you want to use!")
-            print("Example for testing that is 3 lines for default, Use like: python main.py testing")
-            print("Example for using 981 lines, Use like: python main.py 981")
+            printTextShadi("Failed to parse number of lines of dataset you want to use!")
+            printTextShadi("Example for testing that is 3 lines for default, Use like: python main.py testing")
+            printTextShadi("Example for using 981 lines, Use like: python main.py 981")
             sys.exit()
     dataframe_train, dataframe_test = data.get_dataset(num_lines = dataset_size)
 else:
@@ -43,33 +62,101 @@ if device_type == "cpu":
 else:
     if torch.cuda.is_available():
         if device_id >= len(devices):
-            print(f"CUDA available but the Device with ID {device_id} is not available. Using the last available device.")
+            printTextShadi(f"CUDA available but the Device with ID {device_id} is not available. Using the last available device.")
             device_id = -1
         device = devices[device_id]
     else:
-        print("CUDA is not available. Using CPU instead.")
+        printTextShadi("CUDA is not available. Using CPU instead.")
         device = torch.device("cpu")
 
 dataframe_train['y_true'] = 1
 dataframe_test['y_true'] = 0
 dataframe = pd.concat([dataframe_train, dataframe_test], ignore_index=True)
+# deep copy of original dataframe
+original_df_copy = dataframe.copy()
+log_lines = []
+if LOAD_DATA_FRAME and os.path.exists('dataframe_backtr1.csv'):
+    if not os.path.exists('dataframe_backtr2.csv') and not os.path.exists('dataframe_backtr3.csv'):
+        dataframe = pd.read_csv('dataframe_backtr1.csv')
+        log_lines.append("Loaded Backtranslation 1 from dataframe_backtr1.csv")
+        printTextShadi("Loaded Backtranslation 1 from dataframe_backtr1.csv")
+else:
+    dataframe['back_tr_1'] = attack.get_back_translations(dataframe['text'], 'spa_Latn', device=device)
+    log_lines.append("Completed Backtranslation 1")
+    printTextShadi("Completed Backtranslation 1")
+    # Save dataframe for backtr1
+    dataframe.to_csv('dataframe_backtr1.csv', index=False, header=True)
+    log_lines.append("Saved Backtranslation 1 to dataframe_backtr1.csv")
+    printTextShadi("Saved Backtranslation 1 to dataframe_backtr1.csv")
 
-dataframe['back_tr_1'] = attack.get_back_translations(dataframe['text'], 'spa_Latn', device=device)
-dataframe['back_tr_2'] = attack.get_back_translations(dataframe['back_tr_1'], 'fra_Latn', device=device)
-dataframe['back_tr_3'] = attack.get_back_translations(dataframe['back_tr_2'], 'deu_Latn', device=device)
+if LOAD_DATA_FRAME and os.path.exists('dataframe_backtr2.csv'):
+    if not os.path.exists('dataframe_backtr3.csv'):
+        dataframe = pd.read_csv('dataframe_backtr2.csv')
+        log_lines.append("Loaded Backtranslation 2 from dataframe_backtr2.csv")
+        printTextShadi("Loaded Backtranslation 2 from dataframe_backtr2.csv")
+else:
+    dataframe['back_tr_2'] = attack.get_back_translations(dataframe['back_tr_1'], 'fra', device=device)
+    log_lines.append("Completed Backtranslation 2")
+    printTextShadi("Completed Backtranslation 2")
+    # Save dataframe for backtr2
+    dataframe.to_csv('dataframe_backtr2.csv', index=False, header=True)
+    log_lines.append("Saved Backtranslation 2 to dataframe_backtr2.csv")
+    printTextShadi("Saved Backtranslation 2 to dataframe_backtr2.csv")
+
+if LOAD_DATA_FRAME and os.path.exists('dataframe_backtr3.csv'):
+    dataframe = pd.read_csv('dataframe_backtr3.csv')
+    log_lines.append("Loaded Backtranslation 3 from dataframe_backtr3.csv")
+    printTextShadi("Loaded Backtranslation 3 from dataframe_backtr3.csv")
+else:
+    dataframe['back_tr_3'] = attack.get_back_translations(dataframe['back_tr_2'], 'spa', device=device)
+    log_lines.append("Completed Backtranslation 3")
+    printTextShadi("Completed Backtranslation 3")
+    # Save dataframe for backtr3
+    dataframe.to_csv('dataframe_backtr3.csv', index=False, header=True)
+    log_lines.append("Saved Backtranslation 3 to dataframe_backtr3.csv")
+    printTextShadi("Saved Backtranslation 3 to dataframe_backtr3.csv")
+
+# if dataframe is not having any row then raise an error
+if dataframe.shape[0] == 0:
+    raise ValueError("Dataframe is empty")
+# If all lines of dataframe are same as original dataframe then raise an error
+if dataframe.equals(original_df_copy):# and 1==2:
+    raise ValueError("Dataframe is same as original dataframe")
 
 
-# Initialize the model and tokenizer
-tg_model = GPT2LMHeadModel.from_pretrained("gpt2", torch_dtype=torch.float32)
-tg_model.to(device)
 tokenizer = GPT2Tokenizer.from_pretrained("gpt2", torch_dtype=torch.float32)
+tg_model = None
+if LOAD_MODEL and os.path.exists('trained_model.pkl'):
+    # Initialize the model
+    tg_model = GPT2LMHeadModel.from_pretrained("gpt2", torch_dtype=torch.float32)
+    # Load the state dictionary
+    with open('trained_model.pkl', 'rb') as f:
+        state_dict = pickle.load(f)
+    # Load the state dictionary into the model
+    tg_model.load_state_dict(state_dict)
+    # If you want to use it on the same device
+    tg_model.to(device)
+    log_lines.append("Loaded the Model State from trained_model.pkl")
+    printTextShadi("Loaded the Model State from trained_model.pkl")
+else:
+    # Initialize the model and tokenizer
+    tg_model = GPT2LMHeadModel.from_pretrained("gpt2", torch_dtype=torch.float32)
+    tg_model.to(device)
+    # Instantiate dataset class `GPT2Dataset`
+    dataset = GPT2Dataset(dataframe_train['text'])
+    dataloader = DataLoader(dataset, shuffle=False, batch_size=1)
+    # Train the model
+    target_model.trg_mdl_train(target_model=tg_model, dataloader=dataloader, device=device)
+    # Save the model using pickle
+    with open('trained_model.pkl', 'wb') as f:
+        pickle.dump(tg_model.state_dict(), f)
+    log_lines.append("Saved the Model State to trained_model.pkl")
+    printTextShadi("Saved the Model State to trained_model.pkl")
 
-# Assuming you have a dataset class `GPT2Dataset`
-dataset = GPT2Dataset(dataframe_train['text'])
-dataloader = DataLoader(dataset, shuffle=False, batch_size=1)
+if tg_model == None:
+    raise Exception("Model is not loaded or is also not trained")
 
-# Train the model
-target_model.trg_mdl_train(target_model=tg_model, dataloader=dataloader, device=device)
+printTextShadi(f'Finished Training at {time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}')
 
 # tg_model = GPT2LMHeadModel.from_pretrained("gpt2", torch_dtype=torch.float16)
 # tokenizer = GPT2Tokenizer.from_pretrained("gpt2", torch_dtype=torch.float16)
@@ -125,39 +212,46 @@ for i in range(len(tokens_df)):
     tokens_df['tr_3'][i] = np.pad(tokens_df['tr_3'][i][0], (0, abs(tokens_df['tr_3'][i].shape[1] - max_length_y)))
 
     y = np.mean([tokens_df['tr_1'][i], tokens_df['tr_2'][i], tokens_df['tr_3'][i]], axis=0)
-    max_length = max(x.shape[1], y.shape[0])
+    if y.shape:
+        max_length = max(x.shape[1], y.shape[0])
+    else:
+        max_length = max(x.shape[1], 0)
     x = np.pad(x[0], (0, abs(x.shape[1] - max_length)))
-    y = np.pad(y, (0, abs(y.shape[0] - max_length)))
+    if y.shape:
+        y = np.pad(y, (0, abs(y.shape[0] - max_length)))
+    else:
+        y = np.pad(y, (0, abs(0 - max_length)))
     result.append(attack.similarity_comparison([x], [y], 0.38))
-    loss_comparison.append(attack.loss_difference(loss_x, loss_y, 0.1))
+    loss_comparison.append(attack.loss_difference(loss_x, loss_y, -1))
 
-print("Cosine Similarity")
-print(result)
-print("Loss Comparison")
-print(loss_comparison)
+printTextShadi("Cosine Similarity")
+printTextShadi(result)
+printTextShadi("Loss Comparison")
+printTextShadi(loss_comparison)
 
 y_true = dataframe['y_true'].tolist()
 y_pred = [tup[0] for tup in result]
-print("y pred for Cosine Similarity", y_pred)
-print("y true for Cosine Similarity", y_true)
+printTextShadi("y pred for Cosine Similarity", y_pred)
+printTextShadi("y true for Cosine Similarity", y_true)
 
-print()
-print(eval.evaluation_metrics(y_true, y_pred))
-print()
+printTextShadi()
+printTextShadi(eval.evaluation_metrics(y_true, y_pred))
+printTextShadi()
 y_pred_loss = [tup[0] for tup in loss_comparison]
-print("y pred for loss comparison", y_pred_loss)
-print("y true for loss comparison", y_true)
+printTextShadi("y pred for loss comparison", y_pred_loss)
+printTextShadi("y true for loss comparison", y_true)
 
-print()
-print(eval.evaluation_metrics(y_true, y_pred_loss))
-print()
+printTextShadi()
+printTextShadi(eval.evaluation_metrics(y_true, y_pred_loss))
+printTextShadi()
 
 eval.eval_roc_curve(y_true, y_pred_loss)
 
 tpr_at_2_fpr, tpr_at_5_fpr, tpr_at_10_fpr = eval.calculate_tpr_at_fpr(y_true, y_pred_loss)
-print(f"TPR at 2% FPR: {tpr_at_2_fpr}")
-print(f"TPR at 5% FPR: {tpr_at_5_fpr}")
-print(f"TPR at 10% FPR: {tpr_at_10_fpr}")
+printTextShadi(f"TPR at 2% FPR: {tpr_at_2_fpr}")
+printTextShadi(f"TPR at 5% FPR: {tpr_at_5_fpr}")
+printTextShadi(f"TPR at 10% FPR: {tpr_at_10_fpr}")
 
 end_time = time.time()
-print(f"Execution time: {(end_time - start_time)/60} minutes")
+printTextShadi(f"Execution time: {(end_time - start_time)/60} minutes")
+printTextShadi(f"Finished Program at {time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}")

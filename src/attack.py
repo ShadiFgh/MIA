@@ -4,6 +4,14 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from sklearn.metrics.pairwise import cosine_similarity
 import torch
 
+def printTextShadi(*args, **kwargs):
+    with open('output.txt', 'a') as f:
+        for arg in args:
+            print(arg)
+            f.write(f"{arg}\n")
+        for key, value in kwargs.items():
+            print(f"{key}: {value}")
+            f.write(f"{key}: {value}\n")
 
 def generate_back_translations(text, tgt_language, device=torch.device('cpu')):
 
@@ -12,9 +20,11 @@ def generate_back_translations(text, tgt_language, device=torch.device('cpu')):
   model.to(device)
   tokenizer=AutoTokenizer.from_pretrained(checkpoint)
 
-  translator = pipeline("translation", model=model, tokenizer=tokenizer, src_lang='eng_Latn', tgt_lang=tgt_language, max_length=400)
-  back_translator = pipeline("translation", model=model, tokenizer=tokenizer, src_lang=tgt_language, tgt_lang='eng_Latn', max_length=400)
+  translator = pipeline("translation", model=model, tokenizer=tokenizer, src_lang='eng_Latn', tgt_lang=tgt_language, max_length=400, truncation=True)
+  back_translator = pipeline("translation", model=model, tokenizer=tokenizer, src_lang=tgt_language, tgt_lang='eng_Latn', max_length=400, truncation=True)
 
+  if len(text) > 400:
+    print(f"Long text{len(text)}")
   translated_text = translator(text)
   back_translated_text = back_translator(translated_text[0]['translation_text'])
 
