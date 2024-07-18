@@ -12,6 +12,7 @@ import torch
 import time
 import pickle
 import os
+from datetime import datetime
 
 device_type = 'cpu' # cuda or cpu
 device_id = 0
@@ -19,12 +20,25 @@ device_id = 0
 LOAD_DATA_FRAME = False
 LOAD_MODEL = False
 
+RESULT_SAVE_PATH = "Result"
+
+# Get the current datetime
+current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+if not LOAD_DATA_FRAME and not LOAD_MODEL:
+    # Create the new save path with the datetime appended
+    RESULT_SAVE_PATH = f"{RESULT_SAVE_PATH}_{current_datetime}"
+
+# Check if the path exists, and create it if it doesn't
+if not os.path.exists(RESULT_SAVE_PATH):
+    os.makedirs(RESULT_SAVE_PATH)
+
 # Empty Output File
-with open('output.txt', 'w') as f:
+with open(f'{RESULT_SAVE_PATH}/output.txt', 'w') as f:
     f.write('')
 
 def printTextShadi(*args, **kwargs):
-    with open('output.txt', 'a') as f:
+    with open(f'{RESULT_SAVE_PATH}/output.txt', 'a') as f:
         for arg in args:
             print(arg)
             f.write(f"{arg}\n")
@@ -54,6 +68,8 @@ if len(sys.argv) > 1:
 else:
     dataframe_train, dataframe_test = data.get_dataset()
 
+printTextShadi(f"Device Type: {device_type}\nDevice ID:{device_id}\nDataset Size: {dataset_size}\n=========================================================================")
+
 # List of available devices in array
 devices = [torch.device(f"cuda:{i}") for i in range(torch.cuda.device_count())]
 device = None
@@ -75,9 +91,9 @@ dataframe = pd.concat([dataframe_train, dataframe_test], ignore_index=True)
 # deep copy of original dataframe
 original_df_copy = dataframe.copy()
 log_lines = []
-if LOAD_DATA_FRAME and os.path.exists('dataframe_backtr1.csv'):
-    if not os.path.exists('dataframe_backtr2.csv') and not os.path.exists('dataframe_backtr3.csv'):
-        dataframe = pd.read_csv('dataframe_backtr1.csv')
+if LOAD_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr1.csv'):
+    if not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr2.csv') and not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv'):
+        dataframe = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr1.csv')
         log_lines.append("Loaded Backtranslation 1 from dataframe_backtr1.csv")
         printTextShadi("Loaded Backtranslation 1 from dataframe_backtr1.csv")
 else:
@@ -85,13 +101,13 @@ else:
     log_lines.append("Completed Backtranslation 1")
     printTextShadi("Completed Backtranslation 1")
     # Save dataframe for backtr1
-    dataframe.to_csv('dataframe_backtr1.csv', index=False, header=True)
+    dataframe.to_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr1.csv', index=False, header=True)
     log_lines.append("Saved Backtranslation 1 to dataframe_backtr1.csv")
     printTextShadi("Saved Backtranslation 1 to dataframe_backtr1.csv")
 
-if LOAD_DATA_FRAME and os.path.exists('dataframe_backtr2.csv'):
-    if not os.path.exists('dataframe_backtr3.csv'):
-        dataframe = pd.read_csv('dataframe_backtr2.csv')
+if LOAD_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr2.csv'):
+    if not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv'):
+        dataframe = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr2.csv')
         log_lines.append("Loaded Backtranslation 2 from dataframe_backtr2.csv")
         printTextShadi("Loaded Backtranslation 2 from dataframe_backtr2.csv")
 else:
@@ -99,12 +115,12 @@ else:
     log_lines.append("Completed Backtranslation 2")
     printTextShadi("Completed Backtranslation 2")
     # Save dataframe for backtr2
-    dataframe.to_csv('dataframe_backtr2.csv', index=False, header=True)
+    dataframe.to_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr2.csv', index=False, header=True)
     log_lines.append("Saved Backtranslation 2 to dataframe_backtr2.csv")
     printTextShadi("Saved Backtranslation 2 to dataframe_backtr2.csv")
 
-if LOAD_DATA_FRAME and os.path.exists('dataframe_backtr3.csv'):
-    dataframe = pd.read_csv('dataframe_backtr3.csv')
+if LOAD_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv'):
+    dataframe = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv')
     log_lines.append("Loaded Backtranslation 3 from dataframe_backtr3.csv")
     printTextShadi("Loaded Backtranslation 3 from dataframe_backtr3.csv")
 else:
@@ -112,7 +128,7 @@ else:
     log_lines.append("Completed Backtranslation 3")
     printTextShadi("Completed Backtranslation 3")
     # Save dataframe for backtr3
-    dataframe.to_csv('dataframe_backtr3.csv', index=False, header=True)
+    dataframe.to_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv', index=False, header=True)
     log_lines.append("Saved Backtranslation 3 to dataframe_backtr3.csv")
     printTextShadi("Saved Backtranslation 3 to dataframe_backtr3.csv")
 
@@ -126,11 +142,11 @@ if dataframe.equals(original_df_copy):# and 1==2:
 
 tokenizer = GPT2Tokenizer.from_pretrained("gpt2", torch_dtype=torch.float32)
 tg_model = None
-if LOAD_MODEL and os.path.exists('trained_model.pkl'):
+if LOAD_MODEL and os.path.exists(f'{RESULT_SAVE_PATH}/trained_model.pkl'):
     # Initialize the model
     tg_model = GPT2LMHeadModel.from_pretrained("gpt2", torch_dtype=torch.float32)
     # Load the state dictionary
-    with open('trained_model.pkl', 'rb') as f:
+    with open(f'{RESULT_SAVE_PATH}/trained_model.pkl', 'rb') as f:
         state_dict = pickle.load(f)
     # Load the state dictionary into the model
     tg_model.load_state_dict(state_dict)
@@ -148,7 +164,7 @@ else:
     # Train the model
     target_model.trg_mdl_train(target_model=tg_model, dataloader=dataloader, device=device)
     # Save the model using pickle
-    with open('trained_model.pkl', 'wb') as f:
+    with open(f'{RESULT_SAVE_PATH}/trained_model.pkl', 'wb') as f:
         pickle.dump(tg_model.state_dict(), f)
     log_lines.append("Saved the Model State to trained_model.pkl")
     printTextShadi("Saved the Model State to trained_model.pkl")
@@ -192,12 +208,12 @@ generated_text_df['tr_3'] = resp4[0]
 eval_loss_df['tr_3'] = [ten.cpu().numpy() for ten in resp4[1]]
 tokens_df['tr_3'] = [ten.cpu().numpy() for ten in resp4[2]]
 
-dataframe.to_csv('dataframe.csv', mode='a', index=False, header=True)
-dataframe_train.to_csv('dataframe_train.csv', mode='a', index=False, header=True)
-dataframe_test.to_csv('dataframe_test.csv', mode='a', index=False, header=True)
-generated_text_df.to_csv('generated_text_df.csv', mode='a', index=False, header=True)
-tokens_df.to_csv('tokens_df.csv', mode='a', index=False, header=True)
-eval_loss_df.to_csv('eval_loss.csv', mode='a', index=False, header=True)
+dataframe.to_csv(f'{RESULT_SAVE_PATH}/dataframe.csv', mode='a', index=False, header=True)
+dataframe_train.to_csv(f'{RESULT_SAVE_PATH}/dataframe_train.csv', mode='a', index=False, header=True)
+dataframe_test.to_csv(f'{RESULT_SAVE_PATH}/dataframe_test.csv', mode='a', index=False, header=True)
+generated_text_df.to_csv(f'{RESULT_SAVE_PATH}/generated_text_df.csv', mode='a', index=False, header=True)
+tokens_df.to_csv(f'{RESULT_SAVE_PATH}/tokens_df.csv', mode='a', index=False, header=True)
+eval_loss_df.to_csv(f'{RESULT_SAVE_PATH}/eval_loss.csv', mode='a', index=False, header=True)
 
 result = []
 loss_comparison = []

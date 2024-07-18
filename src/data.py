@@ -1,8 +1,10 @@
 import pandas as pd
 from datasets import load_dataset
 
+RESULT_SAVE_PATH = "Result"
+
 def printTextShadi(*args, **kwargs):
-    with open('output.txt', 'a') as f:
+    with open(f'{RESULT_SAVE_PATH}/output.txt', 'a') as f:
         for arg in args:
             print(arg)
             f.write(f"{arg}\n")

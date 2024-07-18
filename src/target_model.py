@@ -4,8 +4,10 @@ from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 import data
 
+RESULT_SAVE_PATH = "Result"
+
 def printTextShadi(*args, **kwargs):
-    with open('output.txt', 'a') as f:
+    with open(f'{RESULT_SAVE_PATH}/output.txt', 'a') as f:
         for arg in args:
             print(arg)
             f.write(f"{arg}\n")
@@ -120,13 +122,13 @@ def generate_text(model, dataloader, tokenizer, device=torch.device('cpu')):
     with torch.no_grad():
         # Evaluate on the dataset 
         for batch in dataloader:
-            print(f">>>>>>>>> {batch["input_ids"].shape}")
-            # Truncate input tensor if it exceded predefined limit (input+output=1024)
-            max_length = 1000 - MAX_NEW_TOKENS_TO_GENERATE
-            if batch['input_ids'].shape[1] > max_length:
-                batch['input_ids'] = batch['input_ids'][:, :max_length]
-                print(f"Truncated the input tensor shape: {batch['input_ids'].shape}") 
             try:
+                print(f">>>>>>>>> {batch["input_ids"].shape}")
+                # Truncate input tensor if it exceded predefined limit (input+output=1024)
+                max_length = 1000 - MAX_NEW_TOKENS_TO_GENERATE
+                if batch['input_ids'].shape[1] > max_length:
+                    batch['input_ids'] = batch['input_ids'][:, :max_length]
+                    print(f"Truncated the input tensor shape: {batch['input_ids'].shape}") 
                 input_ids = batch["input_ids"].to(device)
             except:
                 printTextShadi("Shadi: Something went wrong with input_id part")
