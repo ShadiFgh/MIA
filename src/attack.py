@@ -3,17 +3,8 @@ from transformers import pipeline
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from sklearn.metrics.pairwise import cosine_similarity
 import torch
-
-RESULT_SAVE_PATH = "Result"
-
-def printTextShadi(*args, **kwargs):
-    with open(f'{RESULT_SAVE_PATH}/output.txt', 'a') as f:
-        for arg in args:
-            print(arg)
-            f.write(f"{arg}\n")
-        for key, value in kwargs.items():
-            print(f"{key}: {value}")
-            f.write(f"{key}: {value}\n")
+import printtextShadi
+from printtextShadi import printTextShadi
 
 def generate_back_translations(text, tgt_language, device=torch.device('cpu')):
 

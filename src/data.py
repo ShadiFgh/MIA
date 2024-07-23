@@ -1,16 +1,7 @@
 import pandas as pd
 from datasets import load_dataset
-
-RESULT_SAVE_PATH = "Result"
-
-def printTextShadi(*args, **kwargs):
-    with open(f'{RESULT_SAVE_PATH}/output.txt', 'a') as f:
-        for arg in args:
-            print(arg)
-            f.write(f"{arg}\n")
-        for key, value in kwargs.items():
-            print(f"{key}: {value}")
-            f.write(f"{key}: {value}\n")
+import printtextShadi
+from printtextShadi import printTextShadi
 
 def get_dataset(num_lines=None):
   dataset = load_dataset('ag_news')

@@ -5,17 +5,8 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import label_binarize
 import numpy as np
 from sklearn.metrics import precision_recall_curve, roc_curve
-
-RESULT_SAVE_PATH = "Result"
-
-def printTextShadi(*args, **kwargs):
-    with open(f'{RESULT_SAVE_PATH}/output.txt', 'a') as f:
-        for arg in args:
-            print(arg)
-            f.write(f"{arg}\n")
-        for key, value in kwargs.items():
-            print(f"{key}: {value}")
-            f.write(f"{key}: {value}\n")
+import printtextShadi
+from printtextShadi import printTextShadi
 
 def confusion_matrix(y_true, y_pred):
     """

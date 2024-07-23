@@ -3,17 +3,8 @@ import torch
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 import data
-
-RESULT_SAVE_PATH = "Result"
-
-def printTextShadi(*args, **kwargs):
-    with open(f'{RESULT_SAVE_PATH}/output.txt', 'a') as f:
-        for arg in args:
-            print(arg)
-            f.write(f"{arg}\n")
-        for key, value in kwargs.items():
-            print(f"{key}: {value}")
-            f.write(f"{key}: {value}\n")
+import printtextShadi
+from printtextShadi import printTextShadi
 
 MAX_NEW_TOKENS_TO_GENERATE = 200
 

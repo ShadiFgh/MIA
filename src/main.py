@@ -13,6 +13,8 @@ import time
 import pickle
 import os
 from datetime import datetime
+import printtextShadi
+from printtextShadi import printTextShadi
 
 device_type = 'cpu' # cuda or cpu
 device_id = 0
@@ -33,18 +35,12 @@ if not LOAD_DATA_FRAME and not LOAD_MODEL:
 if not os.path.exists(RESULT_SAVE_PATH):
     os.makedirs(RESULT_SAVE_PATH)
 
+# Set Env variable RESULT_SAVE_PATH
+os.environ['RESULT_SAVE_PATH'] = RESULT_SAVE_PATH
+
 # Empty Output File
 with open(f'{RESULT_SAVE_PATH}/output.txt', 'w') as f:
     f.write('')
-
-def printTextShadi(*args, **kwargs):
-    with open(f'{RESULT_SAVE_PATH}/output.txt', 'a') as f:
-        for arg in args:
-            print(arg)
-            f.write(f"{arg}\n")
-        for key, value in kwargs.items():
-            print(f"{key}: {value}")
-            f.write(f"{key}: {value}\n")
 
 start_time = time.time()
 printTextShadi(f'Started Program at {time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}')
