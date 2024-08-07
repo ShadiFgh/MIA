@@ -1,0 +1,17 @@
+Started Program at 2024-08-07 15:26:30
+Using the Following configuration:
+1. Device Type: cuda
+2. Device ID: 2
+3. Dataset Batch Size: 1000
+4. Dataset Name: None
+5. Selected Batch: 7
+6. Load Train/Test Data Frame: True
+7. Load Back Translations Data Frame: True
+8. Load Model: False
+9. Result Save Path: merged
+10. Exit on Backtranslation Complete: False
+Loaded Train Dataframe with Labels from merged/dataframe_train.csv
+Loaded Test Dataframe with Labels from merged/dataframe_train.csv
+Loaded Backtranslation 3 from dataframe_backtr3.csv
+Time taken for back translation to complete: 0.0 hours, 0.0 minutes, 0.835017204284668 seconds
+Starting training phase...

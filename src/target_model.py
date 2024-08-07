@@ -57,6 +57,7 @@ def trg_mdl_train(target_model, dataloader, device=torch.device('cpu')):
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
 
     model.train()  # Set the model to training mode
+
     for epoch in range(100):
         epoch_loss = 0  # To track the total loss for the epoch
         for batch in tqdm(dataloader, desc=f"Training Epoch {epoch+1}"):

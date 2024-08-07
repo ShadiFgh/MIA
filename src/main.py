@@ -15,21 +15,75 @@ import os
 from datetime import datetime
 import printtextShadi
 from printtextShadi import printTextShadi
+import argparse
+
+def secs_to_hrs_min_secs_str(secs):
+    secs = float(secs)
+    # Calculate hours
+    hours = secs // 3600
+    # Calculate remaining seconds after hours
+    remaining_secs = secs % 3600
+    # Calculate minutes
+    minutes = remaining_secs // 60
+    # Calculate remaining seconds after minutes
+    seconds = remaining_secs % 60
+    # Return formatted string
+    return f"{hours} hours, {minutes} minutes, {seconds} seconds"
 
 device_type = 'cpu' # cuda or cpu
 device_id = 0
-
-LOAD_DATA_FRAME = False
+DATASET_BATCH_SIZE = None
+DATASET_NAME = None
+SELECTED_BATCH = None
+LOAD_TRAIN_TEST_DATA_FRAME = False
+LOAD_BACK_TRANSLATIONS_DATA_FRAME = False
 LOAD_MODEL = False
-
+EXIT_ON_BACKTRANSLATION_COMPLETE = False
 RESULT_SAVE_PATH = "Result"
+dataframe_test, dataframe_train = None, None
+
+
+# Create an ArgumentParser object
+parser = argparse.ArgumentParser(description='Process and manage datasets with specific configurations.')
+    
+# Add arguments with long and short options
+parser.add_argument('--device_type', '-d', type=str, default='cpu', choices=['cpu', 'cuda'], help='Device type: "cpu" or "cuda".')
+parser.add_argument('--device_id', '-i', type=int, default=0, help='Device ID to use if "cuda" is selected.')
+parser.add_argument('--batch_size', '-b', type=int, default=None, help='Dataset batch size.')
+parser.add_argument('--dataset_name', '-n', type=str, default=None, help='Name of the dataset.')
+parser.add_argument('--selected_batch', '-s', type=int, default=None, help='Selected batch number.')
+parser.add_argument('--load_train_test_data_frame', '-lttdf', type=bool, default=False, help='Flag to load test train data frame.')
+parser.add_argument('--load_back_translatio_data_frame', '-lbtdf', type=bool, default=False, help='Flag to load backtrainslations data frame.')
+parser.add_argument('--load_model', '-lm', type=bool, default=False, help='Flag to load model.')
+parser.add_argument('--result_save_path', '-rsp', type=str, default="Result", help='Path to save the result.')
+parser.add_argument('--exit_on_backtranslation_complete', '-ebc', type=bool, default=False, help='Flag to exit when backtranslation is complete.')
+
+# Parse the arguments
+args = parser.parse_args()
+
+# Access the arguments
+device_type = args.device_type
+device_id = args.device_id
+DATASET_BATCH_SIZE = args.batch_size
+DATASET_NAME = args.dataset_name
+SELECTED_BATCH = args.selected_batch
+LOAD_TRAIN_TEST_DATA_FRAME = args.load_train_test_data_frame
+LOAD_BACK_TRANSLATIONS_DATA_FRAME = args.load_back_translatio_data_frame
+LOAD_MODEL = args.load_model
+RESULT_SAVE_PATH = args.result_save_path
+EXIT_ON_BACKTRANSLATION_COMPLETE = args.exit_on_backtranslation_complete
 
 # Get the current datetime
 current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-if not LOAD_DATA_FRAME and not LOAD_MODEL:
-    # Create the new save path with the datetime appended
-    RESULT_SAVE_PATH = f"{RESULT_SAVE_PATH}_{current_datetime}"
+# If Data is not loaded thenadd current datetime to make folder names unique
+if not LOAD_BACK_TRANSLATIONS_DATA_FRAME and not LOAD_MODEL and not LOAD_TRAIN_TEST_DATA_FRAME:
+    # Add current_datetime, DATASET_NAME and DATASET_BATCH_SIZE to RESULT_SAVE_PATH such that folder name is descriptive and unique
+    dataset_name_string = '' if not DATASET_NAME else DATASET_NAME
+    dataset_batch_size_string = 'FullData' if not DATASET_BATCH_SIZE else DATASET_BATCH_SIZE
+    selected_batch_string = '' if SELECTED_BATCH == None else SELECTED_BATCH
+    RESULT_SAVE_PATH = f"{RESULT_SAVE_PATH}_{current_datetime}_{dataset_name_string}_{dataset_batch_size_string}_{selected_batch_string}"
+
 
 # Check if the path exists, and create it if it doesn't
 if not os.path.exists(RESULT_SAVE_PATH):
@@ -44,27 +98,7 @@ with open(f'{RESULT_SAVE_PATH}/output.txt', 'w') as f:
 
 start_time = time.time()
 printTextShadi(f'Started Program at {time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}')
-
-if len(sys.argv) > 1:
-    if len(sys.argv) > 2:
-        device_type = sys.argv[2].lower().strip()
-    if len(sys.argv) == 4:
-        device_id = int(sys.argv[3].lower().strip())
-    if str(sys.argv[1]).lower().strip() == "testing":
-        dataset_size = 3
-    else:
-        try:
-            dataset_size = int(sys.argv[1])
-        except:
-            printTextShadi("Failed to parse number of lines of dataset you want to use!")
-            printTextShadi("Example for testing that is 3 lines for default, Use like: python main.py testing")
-            printTextShadi("Example for using 981 lines, Use like: python main.py 981")
-            sys.exit()
-    dataframe_train, dataframe_test = data.get_dataset(num_lines = dataset_size)
-else:
-    dataframe_train, dataframe_test = data.get_dataset()
-
-printTextShadi(f"Device Type: {device_type}\nDevice ID:{device_id}\nDataset Size: {dataset_size}\n=========================================================================")
+printTextShadi(f"Using the Following configuration:\n1. Device Type: {device_type}\n2. Device ID: {device_id}\n3. Dataset Batch Size: {DATASET_BATCH_SIZE}\n4. Dataset Name: {DATASET_NAME}\n5. Selected Batch: {SELECTED_BATCH}\n6. Load Train/Test Data Frame: {LOAD_TRAIN_TEST_DATA_FRAME}\n7. Load Back Translations Data Frame: {LOAD_BACK_TRANSLATIONS_DATA_FRAME}\n8. Load Model: {LOAD_MODEL}\n9. Result Save Path: {RESULT_SAVE_PATH}\n10. Exit on Backtranslation Complete: {EXIT_ON_BACKTRANSLATION_COMPLETE}")
 
 # List of available devices in array
 devices = [torch.device(f"cuda:{i}") for i in range(torch.cuda.device_count())]
@@ -81,13 +115,32 @@ else:
         printTextShadi("CUDA is not available. Using CPU instead.")
         device = torch.device("cpu")
 
-dataframe_train['y_true'] = 1
-dataframe_test['y_true'] = 0
+
+# Get Dataset
+if not LOAD_TRAIN_TEST_DATA_FRAME:
+    dataframe_train, dataframe_test = data.get_dataset(DATASET_BATCH_SIZE, DATASET_NAME, SELECTED_BATCH)
+    dataframe_train['y_true'] = 1
+    dataframe_test['y_true'] = 0
+else:
+    dataframe_train = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_train.csv')
+    printTextShadi(f"Loaded Train Dataframe with Labels from {RESULT_SAVE_PATH}/dataframe_train.csv")
+    dataframe_test = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_test.csv')
+    printTextShadi(f"Loaded Test Dataframe with Labels from {RESULT_SAVE_PATH}/dataframe_train.csv")
+
+if not LOAD_TRAIN_TEST_DATA_FRAME:
+    # Save train and test Dataframes
+    dataframe_train.to_csv(f'{RESULT_SAVE_PATH}/dataframe_train.csv', index=False, header=True)
+    printTextShadi("Saved Train Dataframe with Labels to dataframe_train.csv")
+    dataframe_test.to_csv(f'{RESULT_SAVE_PATH}/dataframe_test.csv', index=False, header=True)
+    printTextShadi("Saved Test Dataframe with Labels to dataframe_test.csv")
+
+# Concat train and test Dataframes for calculating their backtranslations
 dataframe = pd.concat([dataframe_train, dataframe_test], ignore_index=True)
 # deep copy of original dataframe
 original_df_copy = dataframe.copy()
+
 log_lines = []
-if LOAD_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr1.csv'):
+if LOAD_BACK_TRANSLATIONS_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr1.csv') :
     if not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr2.csv') and not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv'):
         dataframe = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr1.csv')
         log_lines.append("Loaded Backtranslation 1 from dataframe_backtr1.csv")
@@ -101,13 +154,13 @@ else:
     log_lines.append("Saved Backtranslation 1 to dataframe_backtr1.csv")
     printTextShadi("Saved Backtranslation 1 to dataframe_backtr1.csv")
 
-if LOAD_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr2.csv'):
+if LOAD_BACK_TRANSLATIONS_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr2.csv'):
     if not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv'):
         dataframe = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr2.csv')
         log_lines.append("Loaded Backtranslation 2 from dataframe_backtr2.csv")
         printTextShadi("Loaded Backtranslation 2 from dataframe_backtr2.csv")
 else:
-    dataframe['back_tr_2'] = attack.get_back_translations(dataframe['back_tr_1'], 'fra', device=device)
+    dataframe['back_tr_2'] = attack.get_back_translations(dataframe['text'], 'fra_Latn', device=device)
     log_lines.append("Completed Backtranslation 2")
     printTextShadi("Completed Backtranslation 2")
     # Save dataframe for backtr2
@@ -115,12 +168,12 @@ else:
     log_lines.append("Saved Backtranslation 2 to dataframe_backtr2.csv")
     printTextShadi("Saved Backtranslation 2 to dataframe_backtr2.csv")
 
-if LOAD_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv'):
+if LOAD_BACK_TRANSLATIONS_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv'):
     dataframe = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv')
     log_lines.append("Loaded Backtranslation 3 from dataframe_backtr3.csv")
     printTextShadi("Loaded Backtranslation 3 from dataframe_backtr3.csv")
 else:
-    dataframe['back_tr_3'] = attack.get_back_translations(dataframe['back_tr_2'], 'spa', device=device)
+    dataframe['back_tr_3'] = attack.get_back_translations(dataframe['text'], 'deu_Latn', device=device)
     log_lines.append("Completed Backtranslation 3")
     printTextShadi("Completed Backtranslation 3")
     # Save dataframe for backtr3
@@ -135,7 +188,16 @@ if dataframe.shape[0] == 0:
 if dataframe.equals(original_df_copy):# and 1==2:
     raise ValueError("Dataframe is same as original dataframe")
 
+back_translation_end_time = time.time()
+time_taken_till_back_translations = secs_to_hrs_min_secs_str(back_translation_end_time - start_time)
+printTextShadi(f"Time taken for back translation to complete: {time_taken_till_back_translations}")
 
+if EXIT_ON_BACKTRANSLATION_COMPLETE:
+    printTextShadi("Option EXIT_ON_BACKTRANSLATION_COMPLETE was set to True. Therefore Exiting.")
+    sys.exit()
+    
+printTextShadi("Starting training phase...")
+training_start_time = time.time()
 tokenizer = GPT2Tokenizer.from_pretrained("gpt2", torch_dtype=torch.float32)
 tg_model = None
 if LOAD_MODEL and os.path.exists(f'{RESULT_SAVE_PATH}/trained_model.pkl'):
@@ -168,11 +230,15 @@ else:
 if tg_model == None:
     raise Exception("Model is not loaded or is also not trained")
 
-printTextShadi(f'Finished Training at {time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}')
+training_end_time = time.time()
+time_taken_for_training = secs_to_hrs_min_secs_str(training_end_time - training_start_time)
+printTextShadi(f"Time taken for training to complete: {time_taken_for_training}")
 
 # tg_model = GPT2LMHeadModel.from_pretrained("gpt2", torch_dtype=torch.float16)
 # tokenizer = GPT2Tokenizer.from_pretrained("gpt2", torch_dtype=torch.float16)
 
+text_generation_start_time = time.time()
+printTextShadi("Text Generation phase...")
 dataset = GPT2Dataset(dataframe['text'])
 dataloader = DataLoader(dataset, shuffle=False)
 generated_text_df = pd.DataFrame()
@@ -204,12 +270,16 @@ generated_text_df['tr_3'] = resp4[0]
 eval_loss_df['tr_3'] = [ten.cpu().numpy() for ten in resp4[1]]
 tokens_df['tr_3'] = [ten.cpu().numpy() for ten in resp4[2]]
 
-dataframe.to_csv(f'{RESULT_SAVE_PATH}/dataframe.csv', mode='a', index=False, header=True)
-dataframe_train.to_csv(f'{RESULT_SAVE_PATH}/dataframe_train.csv', mode='a', index=False, header=True)
-dataframe_test.to_csv(f'{RESULT_SAVE_PATH}/dataframe_test.csv', mode='a', index=False, header=True)
 generated_text_df.to_csv(f'{RESULT_SAVE_PATH}/generated_text_df.csv', mode='a', index=False, header=True)
+printTextShadi("Saved the generated texts to generated_text_df.csv")
 tokens_df.to_csv(f'{RESULT_SAVE_PATH}/tokens_df.csv', mode='a', index=False, header=True)
+printTextShadi("Saved the tokens to tokens_df.csv")
 eval_loss_df.to_csv(f'{RESULT_SAVE_PATH}/eval_loss.csv', mode='a', index=False, header=True)
+printTextShadi("Saved the loss values to eval_loss.csv")
+
+text_generation_end_time = time.time()
+time_taken_for_text_generation = secs_to_hrs_min_secs_str(text_generation_end_time - text_generation_start_time)
+printTextShadi(f"Time taken for text generation to complete: {time_taken_for_text_generation}")
 
 result = []
 loss_comparison = []

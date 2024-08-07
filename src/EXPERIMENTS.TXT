@@ -1,0 +1,17 @@
+python main.py --device_type cuda --device_id 0 --batch_size 1000 --selected_batch 0 --exit_on_backtranslation_complete true
+python main.py --device_type cuda --device_id 1 --batch_size 1000 --selected_batch 1 --exit_on_backtranslation_complete true
+python main.py --device_type cuda --device_id 3 --batch_size 1000 --selected_batch 2 --exit_on_backtranslation_complete true
+#
+python main.py --device_type cuda --device_id 0 --batch_size 1000 --selected_batch 3 --exit_on_backtranslation_complete true
+python main.py --device_type cuda --device_id 1 --batch_size 1000 --selected_batch 4 --exit_on_backtranslation_complete true
+python main.py --device_type cuda --device_id 2 --batch_size 1000 --selected_batch 5 --exit_on_backtranslation_complete true
+#
+python main.py --device_type cuda --device_id 3 --batch_size 1000 --selected_batch 6 --exit_on_backtranslation_complete true
+python main.py --device_type cuda --device_id 0 --batch_size 1000 --selected_batch 7 --exit_on_backtranslation_complete true
+
+
+
+
+python main.py --device_type cuda --device_id 0 --batch_size 1000 --selected_batch 7 --exit_on_backtranslation_complete false --load_data_frame true --load_modelc false --result_save_path merged
+
+
