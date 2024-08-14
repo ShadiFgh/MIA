@@ -16,6 +16,7 @@ from datetime import datetime
 import printtextShadi
 from printtextShadi import printTextShadi
 import argparse
+import io
 
 def secs_to_hrs_min_secs_str(secs):
     secs = float(secs)
@@ -115,6 +116,14 @@ else:
         printTextShadi("CUDA is not available. Using CPU instead.")
         device = torch.device("cpu")
 
+# Custom Unpickler to load the model
+class custom_unpickler(pickle.Unpickler):
+    def find_class(self, module, name):
+        global device
+        if module=='torch.storage' and name=='_load_from_bytes':
+            return lambda b: torch.load(io.BytesIO(b), map_location=device)
+        else:
+            return super().find_class(module, name)
 
 # Get Dataset
 if not LOAD_TRAIN_TEST_DATA_FRAME:
@@ -205,7 +214,8 @@ if LOAD_MODEL and os.path.exists(f'{RESULT_SAVE_PATH}/trained_model.pkl'):
     tg_model = GPT2LMHeadModel.from_pretrained("gpt2", torch_dtype=torch.float32)
     # Load the state dictionary
     with open(f'{RESULT_SAVE_PATH}/trained_model.pkl', 'rb') as f:
-        state_dict = pickle.load(f)
+        # state_dict = pickle.load(f)
+        state_dict = custom_unpickler(f).load()
     # Load the state dictionary into the model
     tg_model.load_state_dict(state_dict)
     # If you want to use it on the same device
