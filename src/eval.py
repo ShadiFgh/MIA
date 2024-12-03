@@ -12,6 +12,7 @@ def confusion_matrix(y_true, y_pred):
     """
     Calculate the elements of the confusion matrix: True Positives (TP), 
     False Positives (FP), False Negatives (FN), and True Negatives (TN).
+    
 
     Parameters:
     y_true (list or array): List or array of true binary labels (0 or 1).

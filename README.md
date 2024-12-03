@@ -1,34 +1,7 @@
 # MIA
- 
-## Installation
 
-1. Make a virtual environment
+# Sample command
 
-        python -m venv venv
+Note: batch size is the load batch size of data
 
-2. Activate your virtual environment `This varies betweeen OS`
-
-    > 1. On Windows PowerShell
-
-        ./venv/scripts/activate
-    
-    > 2. On Bash like systems
-
-        source ./venv/bin/activate
-
-3.  Install the requirements
-
-        pip install -r requirements.txt
-
-        module load gcc
-
-        module load arrow
-
-
-## Usage
-
-        python main.py [ OPTION ]
-
-    OPTIONS:
-        testing - 3 Lines of Dataset; e.g. python main.py testing
-        1223 - number of lines of Dataset to use; e.g. python main.py 989
+    python main.py --device_type cuda --device_id 1 --batch_size 1000 --selected_batch 7 --load_train_test_data_frame true --load_back_translatio_data_frame true --load_model true --result_save_path Result

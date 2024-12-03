@@ -31,8 +31,8 @@ def secs_to_hrs_min_secs_str(secs):
     # Return formatted string
     return f"{hours} hours, {minutes} minutes, {seconds} seconds"
 
-device_type = 'cpu' # cuda or cpu
-device_id = 0
+device_type = 'cuda' # cuda or cpu
+device_id = 2
 DATASET_BATCH_SIZE = None
 DATASET_NAME = None
 SELECTED_BATCH = None
@@ -40,7 +40,7 @@ LOAD_TRAIN_TEST_DATA_FRAME = False
 LOAD_BACK_TRANSLATIONS_DATA_FRAME = False
 LOAD_MODEL = False
 EXIT_ON_BACKTRANSLATION_COMPLETE = False
-RESULT_SAVE_PATH = "Result"
+RESULT_SAVE_PATH = "DB"
 dataframe_test, dataframe_train = None, None
 
 
@@ -135,7 +135,8 @@ else:
     printTextShadi(f"Loaded Train Dataframe with Labels from {RESULT_SAVE_PATH}/dataframe_train.csv")
     dataframe_test = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_test.csv')
     printTextShadi(f"Loaded Test Dataframe with Labels from {RESULT_SAVE_PATH}/dataframe_train.csv")
-
+    dataframe_train['y_true'] = 1
+    dataframe_test['y_true'] = 0
 if not LOAD_TRAIN_TEST_DATA_FRAME:
     # Save train and test Dataframes
     dataframe_train.to_csv(f'{RESULT_SAVE_PATH}/dataframe_train.csv', index=False, header=True)
@@ -150,7 +151,7 @@ original_df_copy = dataframe.copy()
 
 log_lines = []
 if LOAD_BACK_TRANSLATIONS_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr1.csv') :
-    if not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr2.csv') and not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv'):
+    if not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr2.csv') and not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv') and not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr4.csv') and not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr5.csv'):
         dataframe = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr1.csv')
         log_lines.append("Loaded Backtranslation 1 from dataframe_backtr1.csv")
         printTextShadi("Loaded Backtranslation 1 from dataframe_backtr1.csv")
@@ -164,7 +165,7 @@ else:
     printTextShadi("Saved Backtranslation 1 to dataframe_backtr1.csv")
 
 if LOAD_BACK_TRANSLATIONS_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr2.csv'):
-    if not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv'):
+    if not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv') and not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr4.csv') and not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr5.csv'):
         dataframe = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr2.csv')
         log_lines.append("Loaded Backtranslation 2 from dataframe_backtr2.csv")
         printTextShadi("Loaded Backtranslation 2 from dataframe_backtr2.csv")
@@ -178,9 +179,10 @@ else:
     printTextShadi("Saved Backtranslation 2 to dataframe_backtr2.csv")
 
 if LOAD_BACK_TRANSLATIONS_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv'):
-    dataframe = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv')
-    log_lines.append("Loaded Backtranslation 3 from dataframe_backtr3.csv")
-    printTextShadi("Loaded Backtranslation 3 from dataframe_backtr3.csv")
+    if not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr4.csv') and not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr5.csv'):
+        dataframe = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv')
+        log_lines.append("Loaded Backtranslation 3 from dataframe_backtr3.csv")
+        printTextShadi("Loaded Backtranslation 3 from dataframe_backtr3.csv")
 else:
     dataframe['back_tr_3'] = attack.get_back_translations(dataframe['text'], 'deu_Latn', device=device)
     log_lines.append("Completed Backtranslation 3")
@@ -190,12 +192,39 @@ else:
     log_lines.append("Saved Backtranslation 3 to dataframe_backtr3.csv")
     printTextShadi("Saved Backtranslation 3 to dataframe_backtr3.csv")
 
+if LOAD_BACK_TRANSLATIONS_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr4.csv'):
+    if not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr5.csv'):
+        dataframe = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr4.csv')
+        log_lines.append("Loaded Backtranslation 4 from dataframe_backtr4.csv")
+        printTextShadi("Loaded Backtranslation 4 from dataframe_backtr4.csv")
+else:
+    dataframe['back_tr_4'] = attack.get_back_translations(dataframe['text'], 'pes_Arab', device=device)
+    log_lines.append("Completed Backtranslation 4")
+    printTextShadi("Completed Backtranslation 4")
+    # Save dataframe for backtr4
+    dataframe.to_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr4.csv', index=False, header=True)
+    log_lines.append("Saved Backtranslation 4 to dataframe_backtr4.csv")
+    printTextShadi("Saved Backtranslation 4 to dataframe_backtr4.csv")
+
+if LOAD_BACK_TRANSLATIONS_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr5.csv'):
+    dataframe = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr5.csv')
+    log_lines.append("Loaded Backtranslation 5 from dataframe_backtr5.csv")
+    printTextShadi("Loaded Backtranslation 5 from dataframe_backtr5.csv")
+else:
+    dataframe['back_tr_5'] = attack.get_back_translations(dataframe['text'], 'zho_Hans', device=device)
+    log_lines.append("Completed Backtranslation 5")
+    printTextShadi("Completed Backtranslation 5")
+    # Save dataframe for backtr5
+    dataframe.to_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr5.csv', index=False, header=True)
+    log_lines.append("Saved Backtranslation 5 to dataframe_backtr5.csv")
+    printTextShadi("Saved Backtranslation 5 to dataframe_backtr5.csv")
+
 # if dataframe is not having any row then raise an error
 if dataframe.shape[0] == 0:
     raise ValueError("Dataframe is empty")
 # If all lines of dataframe are same as original dataframe then raise an error
-if dataframe.equals(original_df_copy):# and 1==2:
-    raise ValueError("Dataframe is same as original dataframe")
+# if dataframe.equals(original_df_copy):# and 1==2:
+#     raise ValueError("Dataframe is same as original dataframe")
 
 back_translation_end_time = time.time()
 time_taken_till_back_translations = secs_to_hrs_min_secs_str(back_translation_end_time - start_time)
@@ -248,42 +277,62 @@ printTextShadi(f"Time taken for training to complete: {time_taken_for_training}"
 # tokenizer = GPT2Tokenizer.from_pretrained("gpt2", torch_dtype=torch.float16)
 
 text_generation_start_time = time.time()
-printTextShadi("Text Generation phase...")
+printTextShadi("Get Loss values phase...")
 dataset = GPT2Dataset(dataframe['text'])
 dataloader = DataLoader(dataset, shuffle=False)
 generated_text_df = pd.DataFrame()
 eval_loss_df = pd.DataFrame()
 tokens_df = pd.DataFrame()
+logits_df = pd.DataFrame()
+
+# loggits = target_model.get_scores_from_logits(tg_model, dataloader, tokenizer, device=device)
+# loggits.to_csv(f'{RESULT_SAVE_PATH}/logits.csv', mode='a', index=False, header=True)
+# printTextShadi("Saved the logits to logits_df.csv")
+
 resp = target_model.generate_text(tg_model, dataloader, tokenizer, device=device)
-generated_text_df['original'] = resp[0]
-eval_loss_df['original'] = [ten.cpu().numpy() for ten in resp[1]]
-tokens_df['original'] = [ten.cpu().numpy() for ten in resp[2]]
+# generated_text_df['original'] = resp[0]
+eval_loss_df['original'] = resp
+# tokens_df['original'] = [ten.cpu().numpy() for ten in resp[2]]
 
 dataset_back_tr_1 = GPT2Dataset(dataframe['back_tr_1'])
 dataloader = DataLoader(dataset_back_tr_1, shuffle=False, batch_size=1)
 resp2= target_model.generate_text(tg_model, dataloader, tokenizer, device=device)
-generated_text_df['tr_1'] = resp2[0]
-eval_loss_df['tr_1'] = [ten.cpu().numpy() for ten in resp2[1]]
-tokens_df['tr_1'] = [ten.cpu().numpy() for ten in resp2[2]]
+# generated_text_df['tr_1'] = resp2[0]
+eval_loss_df['tr_1'] = resp2
+# tokens_df['tr_1'] = [ten.cpu().numpy() for ten in resp2[2]]
 
 dataset_back_tr_2 = GPT2Dataset(dataframe['back_tr_2'])
 dataloader = DataLoader(dataset_back_tr_2, shuffle=False, batch_size=1)
 resp3= target_model.generate_text(tg_model, dataloader, tokenizer, device=device)
-generated_text_df['tr_2'] = resp3[0]
-eval_loss_df['tr_2'] = [ten.cpu().numpy() for ten in resp3[1]]
-tokens_df['tr_2'] = [ten.cpu().numpy() for ten in resp3[2]]
+# generated_text_df['tr_2'] = resp3[0]
+eval_loss_df['tr_2'] = resp3
+# tokens_df['tr_2'] = [ten.cpu().numpy() for ten in resp3[2]]
 
 dataset_back_tr_3 = GPT2Dataset(dataframe['back_tr_3'])
 dataloader = DataLoader(dataset_back_tr_3, shuffle=False, batch_size=1)
 resp4= target_model.generate_text(tg_model, dataloader, tokenizer, device=device)
-generated_text_df['tr_3'] = resp4[0]
-eval_loss_df['tr_3'] = [ten.cpu().numpy() for ten in resp4[1]]
-tokens_df['tr_3'] = [ten.cpu().numpy() for ten in resp4[2]]
+# generated_text_df['tr_3'] = resp4[0]
+eval_loss_df['tr_3'] = resp4
+# tokens_df['tr_3'] = [ten.cpu().numpy() for ten in resp4[2]]
 
-generated_text_df.to_csv(f'{RESULT_SAVE_PATH}/generated_text_df.csv', mode='a', index=False, header=True)
-printTextShadi("Saved the generated texts to generated_text_df.csv")
-tokens_df.to_csv(f'{RESULT_SAVE_PATH}/tokens_df.csv', mode='a', index=False, header=True)
-printTextShadi("Saved the tokens to tokens_df.csv")
+dataset_back_tr_4 = GPT2Dataset(dataframe['back_tr_4'])
+dataloader = DataLoader(dataset_back_tr_4, shuffle=False, batch_size=1)
+resp5= target_model.generate_text(tg_model, dataloader, tokenizer, device=device)
+# generated_text_df['tr_4'] = resp5[0]
+eval_loss_df['tr_4'] = resp5
+# tokens_df['tr_4'] = [ten.cpu().numpy() for ten in resp5[2]]
+
+dataset_back_tr_5 = GPT2Dataset(dataframe['back_tr_5'])
+dataloader = DataLoader(dataset_back_tr_5, shuffle=False, batch_size=1)
+resp6= target_model.generate_text(tg_model, dataloader, tokenizer, device=device)
+# generated_text_df['tr_5'] = resp6[0]
+eval_loss_df['tr_5'] = resp6
+# tokens_df['tr_5'] = [ten.cpu().numpy() for ten in resp6[2]]
+
+# generated_text_df.to_csv(f'{RESULT_SAVE_PATH}/generated_text_df.csv', mode='a', index=False, header=True)
+# printTextShadi("Saved the generated texts to generated_text_df.csv")
+# tokens_df.to_csv(f'{RESULT_SAVE_PATH}/tokens_df.csv', mode='a', index=False, header=True)
+# printTextShadi("Saved the tokens to tokens_df.csv")
 eval_loss_df.to_csv(f'{RESULT_SAVE_PATH}/eval_loss.csv', mode='a', index=False, header=True)
 printTextShadi("Saved the loss values to eval_loss.csv")
 
@@ -291,43 +340,22 @@ text_generation_end_time = time.time()
 time_taken_for_text_generation = secs_to_hrs_min_secs_str(text_generation_end_time - text_generation_start_time)
 printTextShadi(f"Time taken for text generation to complete: {time_taken_for_text_generation}")
 
-result = []
+# result = []
 loss_comparison = []
-for i in range(len(tokens_df)):
-    x =tokens_df['original'][i]
+for i in range(len(loss_comparison)):
+    # x =tokens_df['original'][i]
     loss_x = eval_loss_df['original'][i]
     loss_y = np.mean([eval_loss_df['tr_1'][i], eval_loss_df['tr_2'][i], eval_loss_df['tr_3'][i]])
-    max_length_y = max(tokens_df['tr_1'][i].shape[1], tokens_df['tr_2'][i].shape[1], tokens_df['tr_3'][i].shape[1])
 
-    tokens_df['tr_1'][i] = np.pad(tokens_df['tr_1'][i][0], (0, abs(tokens_df['tr_1'][i].shape[1] - max_length_y)))
-    tokens_df['tr_2'][i] = np.pad(tokens_df['tr_2'][i][0], (0, abs(tokens_df['tr_2'][i].shape[1] - max_length_y)))
-    tokens_df['tr_3'][i] = np.pad(tokens_df['tr_3'][i][0], (0, abs(tokens_df['tr_3'][i].shape[1] - max_length_y)))
-
-    y = np.mean([tokens_df['tr_1'][i], tokens_df['tr_2'][i], tokens_df['tr_3'][i]], axis=0)
-    if y.shape:
-        max_length = max(x.shape[1], y.shape[0])
-    else:
-        max_length = max(x.shape[1], 0)
-    x = np.pad(x[0], (0, abs(x.shape[1] - max_length)))
-    if y.shape:
-        y = np.pad(y, (0, abs(y.shape[0] - max_length)))
-    else:
-        y = np.pad(y, (0, abs(0 - max_length)))
-    result.append(attack.similarity_comparison([x], [y], 0.38))
     loss_comparison.append(attack.loss_difference(loss_x, loss_y, -1))
 
-printTextShadi("Cosine Similarity")
-printTextShadi(result)
+
 printTextShadi("Loss Comparison")
 printTextShadi(loss_comparison)
 
 y_true = dataframe['y_true'].tolist()
-y_pred = [tup[0] for tup in result]
-printTextShadi("y pred for Cosine Similarity", y_pred)
-printTextShadi("y true for Cosine Similarity", y_true)
 
-printTextShadi()
-printTextShadi(eval.evaluation_metrics(y_true, y_pred))
+
 printTextShadi()
 y_pred_loss = [tup[0] for tup in loss_comparison]
 printTextShadi("y pred for loss comparison", y_pred_loss)

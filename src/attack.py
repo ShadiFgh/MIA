@@ -28,13 +28,6 @@ def get_back_translations(dataset, target_lan, device=torch.device('cpu')):
   return dataset.apply(generate_back_translations, tgt_language=target_lan, device=device)
 
 
-def similarity_comparison(x, y, w):
-
-  cosine = cosine_similarity(x, y)
-  if cosine < w:
-    return 1, cosine
-  elif cosine > w:
-    return 0, cosine
   
 
 def loss_difference(x, y, w):
