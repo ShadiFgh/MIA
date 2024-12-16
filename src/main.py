@@ -156,7 +156,7 @@ if LOAD_BACK_TRANSLATIONS_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dat
         log_lines.append("Loaded Backtranslation 1 from dataframe_backtr1.csv")
         printTextShadi("Loaded Backtranslation 1 from dataframe_backtr1.csv")
 else:
-    dataframe['back_tr_1'] = attack.get_back_translations(dataframe['text'], 'spa_Latn', device=device)
+    dataframe['back_tr_1'] = attack.get_back_translations(dataframe['text'], 'fra_Latn', 'arb_Arab', device=device)
     log_lines.append("Completed Backtranslation 1")
     printTextShadi("Completed Backtranslation 1")
     # Save dataframe for backtr1
@@ -170,7 +170,7 @@ if LOAD_BACK_TRANSLATIONS_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dat
         log_lines.append("Loaded Backtranslation 2 from dataframe_backtr2.csv")
         printTextShadi("Loaded Backtranslation 2 from dataframe_backtr2.csv")
 else:
-    dataframe['back_tr_2'] = attack.get_back_translations(dataframe['text'], 'fra_Latn', device=device)
+    dataframe['back_tr_2'] = attack.get_back_translations(dataframe['back_tr_1'], 'fra_Latn', 'arb_Arab', device=device)
     log_lines.append("Completed Backtranslation 2")
     printTextShadi("Completed Backtranslation 2")
     # Save dataframe for backtr2
@@ -184,7 +184,7 @@ if LOAD_BACK_TRANSLATIONS_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dat
         log_lines.append("Loaded Backtranslation 3 from dataframe_backtr3.csv")
         printTextShadi("Loaded Backtranslation 3 from dataframe_backtr3.csv")
 else:
-    dataframe['back_tr_3'] = attack.get_back_translations(dataframe['text'], 'deu_Latn', device=device)
+    dataframe['back_tr_3'] = attack.get_back_translations(dataframe['back_tr_2'], 'fra_Latn', 'arb_Arab', device=device)
     log_lines.append("Completed Backtranslation 3")
     printTextShadi("Completed Backtranslation 3")
     # Save dataframe for backtr3
@@ -198,7 +198,7 @@ if LOAD_BACK_TRANSLATIONS_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dat
         log_lines.append("Loaded Backtranslation 4 from dataframe_backtr4.csv")
         printTextShadi("Loaded Backtranslation 4 from dataframe_backtr4.csv")
 else:
-    dataframe['back_tr_4'] = attack.get_back_translations(dataframe['text'], 'pes_Arab', device=device)
+    dataframe['back_tr_4'] = attack.get_back_translations(dataframe['back_tr_3'], 'fra_Latn', 'arb_Arab', device=device)
     log_lines.append("Completed Backtranslation 4")
     printTextShadi("Completed Backtranslation 4")
     # Save dataframe for backtr4
@@ -211,7 +211,7 @@ if LOAD_BACK_TRANSLATIONS_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dat
     log_lines.append("Loaded Backtranslation 5 from dataframe_backtr5.csv")
     printTextShadi("Loaded Backtranslation 5 from dataframe_backtr5.csv")
 else:
-    dataframe['back_tr_5'] = attack.get_back_translations(dataframe['text'], 'zho_Hans', device=device)
+    dataframe['back_tr_5'] = attack.get_back_translations(dataframe['back_tr_4'], 'fra_Latn', 'arb_Arab', device=device)
     log_lines.append("Completed Backtranslation 5")
     printTextShadi("Completed Backtranslation 5")
     # Save dataframe for backtr5
@@ -346,8 +346,10 @@ for i in range(len(loss_comparison)):
     # x =tokens_df['original'][i]
     loss_x = eval_loss_df['original'][i]
     loss_y = np.mean([eval_loss_df['tr_1'][i], eval_loss_df['tr_2'][i], eval_loss_df['tr_3'][i]])
-
-    loss_comparison.append(attack.loss_difference(loss_x, loss_y, -1))
+    m = 0.7
+    w = loss_y * m
+    loss_comparison.append(attack.loss_difference(loss_x, loss_y, -w))
+    
 
 
 printTextShadi("Loss Comparison")
