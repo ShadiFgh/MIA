@@ -5,6 +5,8 @@ from torch.utils.data import Dataset, DataLoader
 import data
 import printtextShadi
 from printtextShadi import printTextShadi
+from private_transformers import PrivacyEngine
+import torch.nn.functional as F
 
 MAX_NEW_TOKENS_TO_GENERATE = 200
 
@@ -33,6 +35,16 @@ def trg_mdl_train(target_model, dataloader, device=torch.device('cpu')):
     # Load the target model
     model = target_model
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
+    
+    privacy_engine = PrivacyEngine(
+    model,
+    batch_size=1,
+    sample_size=50000,
+    epochs=100,
+    max_grad_norm=0.1,
+    target_epsilon=3,
+)
+    privacy_engine.attach(optimizer)
 
     model.train()  # Set the model to training mode
 
@@ -52,7 +64,11 @@ def trg_mdl_train(target_model, dataloader, device=torch.device('cpu')):
 
             # Forward pass
             outputs = model(input_ids=input_ids, labels=input_ids)
-            loss = outputs.loss
+            # loss = outputs.loss
+            labels = input_ids[:, 1:, ]
+            logits = outputs.logits[:, :-1, :].permute(0, 2, 1)
+            # `loss` is a 1-D tensor of shape (batch_size,).
+            loss = F.cross_entropy(logits, labels, reduction="none").mean(dim=1)
 
             # Check for NaN values in the loss
             if torch.isnan(loss):
@@ -60,13 +76,13 @@ def trg_mdl_train(target_model, dataloader, device=torch.device('cpu')):
                 continue
 
             # Backward pass
-            loss.backward()
+            # loss.backward()
 
             # Gradient clipping
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
 
             # Optimization step
-            optimizer.step()
+            optimizer.step(loss=loss)
 
             # Accumulate the loss
             epoch_loss += loss.item()
