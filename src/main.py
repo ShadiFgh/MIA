@@ -13,8 +13,8 @@ import time
 import pickle
 import os
 from datetime import datetime
-import printtextShadi
-from printtextShadi import printTextShadi
+import printtextme
+from printtextme import printTextme
 import argparse
 import io
 
@@ -98,8 +98,8 @@ with open(f'{RESULT_SAVE_PATH}/output.txt', 'w') as f:
     f.write('')
 
 start_time = time.time()
-printTextShadi(f'Started Program at {time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}')
-printTextShadi(f"Using the Following configuration:\n1. Device Type: {device_type}\n2. Device ID: {device_id}\n3. Dataset Batch Size: {DATASET_BATCH_SIZE}\n4. Dataset Name: {DATASET_NAME}\n5. Selected Batch: {SELECTED_BATCH}\n6. Load Train/Test Data Frame: {LOAD_TRAIN_TEST_DATA_FRAME}\n7. Load Back Translations Data Frame: {LOAD_BACK_TRANSLATIONS_DATA_FRAME}\n8. Load Model: {LOAD_MODEL}\n9. Result Save Path: {RESULT_SAVE_PATH}\n10. Exit on Backtranslation Complete: {EXIT_ON_BACKTRANSLATION_COMPLETE}")
+printTextme(f'Started Program at {time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}')
+printTextme(f"Using the Following configuration:\n1. Device Type: {device_type}\n2. Device ID: {device_id}\n3. Dataset Batch Size: {DATASET_BATCH_SIZE}\n4. Dataset Name: {DATASET_NAME}\n5. Selected Batch: {SELECTED_BATCH}\n6. Load Train/Test Data Frame: {LOAD_TRAIN_TEST_DATA_FRAME}\n7. Load Back Translations Data Frame: {LOAD_BACK_TRANSLATIONS_DATA_FRAME}\n8. Load Model: {LOAD_MODEL}\n9. Result Save Path: {RESULT_SAVE_PATH}\n10. Exit on Backtranslation Complete: {EXIT_ON_BACKTRANSLATION_COMPLETE}")
 
 # List of available devices in array
 devices = [torch.device(f"cuda:{i}") for i in range(torch.cuda.device_count())]
@@ -109,11 +109,11 @@ if device_type == "cpu":
 else:
     if torch.cuda.is_available():
         if device_id >= len(devices):
-            printTextShadi(f"CUDA available but the Device with ID {device_id} is not available. Using the last available device.")
+            printTextme(f"CUDA available but the Device with ID {device_id} is not available. Using the last available device.")
             device_id = -1
         device = devices[device_id]
     else:
-        printTextShadi("CUDA is not available. Using CPU instead.")
+        printTextme("CUDA is not available. Using CPU instead.")
         device = torch.device("cpu")
 
 # Custom Unpickler to load the model
@@ -132,17 +132,17 @@ if not LOAD_TRAIN_TEST_DATA_FRAME:
     dataframe_test['y_true'] = 0
 else:
     dataframe_train = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_train.csv')
-    printTextShadi(f"Loaded Train Dataframe with Labels from {RESULT_SAVE_PATH}/dataframe_train.csv")
+    printTextme(f"Loaded Train Dataframe with Labels from {RESULT_SAVE_PATH}/dataframe_train.csv")
     dataframe_test = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_test.csv')
-    printTextShadi(f"Loaded Test Dataframe with Labels from {RESULT_SAVE_PATH}/dataframe_train.csv")
+    printTextme(f"Loaded Test Dataframe with Labels from {RESULT_SAVE_PATH}/dataframe_train.csv")
     dataframe_train['y_true'] = 1
     dataframe_test['y_true'] = 0
 if not LOAD_TRAIN_TEST_DATA_FRAME:
     # Save train and test Dataframes
     dataframe_train.to_csv(f'{RESULT_SAVE_PATH}/dataframe_train.csv', index=False, header=True)
-    printTextShadi("Saved Train Dataframe with Labels to dataframe_train.csv")
+    printTextme("Saved Train Dataframe with Labels to dataframe_train.csv")
     dataframe_test.to_csv(f'{RESULT_SAVE_PATH}/dataframe_test.csv', index=False, header=True)
-    printTextShadi("Saved Test Dataframe with Labels to dataframe_test.csv")
+    printTextme("Saved Test Dataframe with Labels to dataframe_test.csv")
 
 # Concat train and test Dataframes for calculating their backtranslations
 dataframe = pd.concat([dataframe_train, dataframe_test], ignore_index=True)
@@ -154,70 +154,70 @@ if LOAD_BACK_TRANSLATIONS_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dat
     if not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr2.csv') and not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv') and not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr4.csv') and not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr5.csv'):
         dataframe = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr1.csv')
         log_lines.append("Loaded Backtranslation 1 from dataframe_backtr1.csv")
-        printTextShadi("Loaded Backtranslation 1 from dataframe_backtr1.csv")
+        printTextme("Loaded Backtranslation 1 from dataframe_backtr1.csv")
 else:
     dataframe['back_tr_1'] = attack.get_back_translations(dataframe['text'], 'fra_Latn', 'deu_Latn', device=device)
     log_lines.append("Completed Backtranslation 1")
-    printTextShadi("Completed Backtranslation 1")
+    printTextme("Completed Backtranslation 1")
     # Save dataframe for backtr1
     dataframe.to_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr1.csv', index=False, header=True)
     log_lines.append("Saved Backtranslation 1 to dataframe_backtr1.csv")
-    printTextShadi("Saved Backtranslation 1 to dataframe_backtr1.csv")
+    printTextme("Saved Backtranslation 1 to dataframe_backtr1.csv")
 
 if LOAD_BACK_TRANSLATIONS_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr2.csv'):
     if not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv') and not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr4.csv') and not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr5.csv'):
         dataframe = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr2.csv')
         log_lines.append("Loaded Backtranslation 2 from dataframe_backtr2.csv")
-        printTextShadi("Loaded Backtranslation 2 from dataframe_backtr2.csv")
+        printTextme("Loaded Backtranslation 2 from dataframe_backtr2.csv")
 else:
     dataframe['back_tr_2'] = attack.get_back_translations(dataframe['back_tr_1'], 'fra_Latn', 'deu_Latn', device=device)
     log_lines.append("Completed Backtranslation 2")
-    printTextShadi("Completed Backtranslation 2")
+    printTextme("Completed Backtranslation 2")
     # Save dataframe for backtr2
     dataframe.to_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr2.csv', index=False, header=True)
     log_lines.append("Saved Backtranslation 2 to dataframe_backtr2.csv")
-    printTextShadi("Saved Backtranslation 2 to dataframe_backtr2.csv")
+    printTextme("Saved Backtranslation 2 to dataframe_backtr2.csv")
 
 if LOAD_BACK_TRANSLATIONS_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv'):
     if not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr4.csv') and not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr5.csv'):
         dataframe = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv')
         log_lines.append("Loaded Backtranslation 3 from dataframe_backtr3.csv")
-        printTextShadi("Loaded Backtranslation 3 from dataframe_backtr3.csv")
+        printTextme("Loaded Backtranslation 3 from dataframe_backtr3.csv")
 else:
     dataframe['back_tr_3'] = attack.get_back_translations(dataframe['back_tr_2'], 'fra_Latn', 'deu_Latn', device=device)
     log_lines.append("Completed Backtranslation 3")
-    printTextShadi("Completed Backtranslation 3")
+    printTextme("Completed Backtranslation 3")
     # Save dataframe for backtr3
     dataframe.to_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr3.csv', index=False, header=True)
     log_lines.append("Saved Backtranslation 3 to dataframe_backtr3.csv")
-    printTextShadi("Saved Backtranslation 3 to dataframe_backtr3.csv")
+    printTextme("Saved Backtranslation 3 to dataframe_backtr3.csv")
 
 if LOAD_BACK_TRANSLATIONS_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr4.csv'):
     if not os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr5.csv'):
         dataframe = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr4.csv')
         log_lines.append("Loaded Backtranslation 4 from dataframe_backtr4.csv")
-        printTextShadi("Loaded Backtranslation 4 from dataframe_backtr4.csv")
+        printTextme("Loaded Backtranslation 4 from dataframe_backtr4.csv")
 else:
     dataframe['back_tr_4'] = attack.get_back_translations(dataframe['back_tr_3'], 'fra_Latn', 'deu_Latn', device=device)
     log_lines.append("Completed Backtranslation 4")
-    printTextShadi("Completed Backtranslation 4")
+    printTextme("Completed Backtranslation 4")
     # Save dataframe for backtr4
     dataframe.to_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr4.csv', index=False, header=True)
     log_lines.append("Saved Backtranslation 4 to dataframe_backtr4.csv")
-    printTextShadi("Saved Backtranslation 4 to dataframe_backtr4.csv")
+    printTextme("Saved Backtranslation 4 to dataframe_backtr4.csv")
 
 if LOAD_BACK_TRANSLATIONS_DATA_FRAME and os.path.exists(f'{RESULT_SAVE_PATH}/dataframe_backtr5.csv'):
     dataframe = pd.read_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr5.csv')
     log_lines.append("Loaded Backtranslation 5 from dataframe_backtr5.csv")
-    printTextShadi("Loaded Backtranslation 5 from dataframe_backtr5.csv")
+    printTextme("Loaded Backtranslation 5 from dataframe_backtr5.csv")
 else:
     dataframe['back_tr_5'] = attack.get_back_translations(dataframe['back_tr_4'], 'fra_Latn', 'deu_Latn', device=device)
     log_lines.append("Completed Backtranslation 5")
-    printTextShadi("Completed Backtranslation 5")
+    printTextme("Completed Backtranslation 5")
     # Save dataframe for backtr5
     dataframe.to_csv(f'{RESULT_SAVE_PATH}/dataframe_backtr5.csv', index=False, header=True)
     log_lines.append("Saved Backtranslation 5 to dataframe_backtr5.csv")
-    printTextShadi("Saved Backtranslation 5 to dataframe_backtr5.csv")
+    printTextme("Saved Backtranslation 5 to dataframe_backtr5.csv")
 
 # if dataframe is not having any row then raise an error
 if dataframe.shape[0] == 0:
@@ -228,13 +228,13 @@ if dataframe.shape[0] == 0:
 
 back_translation_end_time = time.time()
 time_taken_till_back_translations = secs_to_hrs_min_secs_str(back_translation_end_time - start_time)
-printTextShadi(f"Time taken for back translation to complete: {time_taken_till_back_translations}")
+printTextme(f"Time taken for back translation to complete: {time_taken_till_back_translations}")
 
 if EXIT_ON_BACKTRANSLATION_COMPLETE:
-    printTextShadi("Option EXIT_ON_BACKTRANSLATION_COMPLETE was set to True. Therefore Exiting.")
+    printTextme("Option EXIT_ON_BACKTRANSLATION_COMPLETE was set to True. Therefore Exiting.")
     sys.exit()
     
-printTextShadi("Starting training phase...")
+printTextme("Starting training phase...")
 training_start_time = time.time()
 tokenizer = GPT2Tokenizer.from_pretrained("gpt2", torch_dtype=torch.float32)
 tg_model = None
@@ -250,7 +250,7 @@ if LOAD_MODEL and os.path.exists(f'{RESULT_SAVE_PATH}/trained_model.pkl'):
     # If you want to use it on the same device
     tg_model.to(device)
     log_lines.append("Loaded the Model State from trained_model.pkl")
-    printTextShadi("Loaded the Model State from trained_model.pkl")
+    printTextme("Loaded the Model State from trained_model.pkl")
 else:
     # Initialize the model and tokenizer
     tg_model = GPT2LMHeadModel.from_pretrained("gpt2", torch_dtype=torch.float32)
@@ -264,20 +264,20 @@ else:
     with open(f'{RESULT_SAVE_PATH}/trained_model.pkl', 'wb') as f:
         pickle.dump(tg_model.state_dict(), f)
     log_lines.append("Saved the Model State to trained_model.pkl")
-    printTextShadi("Saved the Model State to trained_model.pkl")
+    printTextme("Saved the Model State to trained_model.pkl")
 
 if tg_model == None:
     raise Exception("Model is not loaded or is also not trained")
 
 training_end_time = time.time()
 time_taken_for_training = secs_to_hrs_min_secs_str(training_end_time - training_start_time)
-printTextShadi(f"Time taken for training to complete: {time_taken_for_training}")
+printTextme(f"Time taken for training to complete: {time_taken_for_training}")
 
 # tg_model = GPT2LMHeadModel.from_pretrained("gpt2", torch_dtype=torch.float16)
 # tokenizer = GPT2Tokenizer.from_pretrained("gpt2", torch_dtype=torch.float16)
 
 text_generation_start_time = time.time()
-printTextShadi("Get Loss values phase...")
+printTextme("Get Loss values phase...")
 dataset = GPT2Dataset(dataframe['text'])
 dataloader = DataLoader(dataset, shuffle=False)
 generated_text_df = pd.DataFrame()
@@ -287,7 +287,7 @@ logits_df = pd.DataFrame()
 
 # loggits = target_model.get_scores_from_logits(tg_model, dataloader, tokenizer, device=device)
 # loggits.to_csv(f'{RESULT_SAVE_PATH}/logits.csv', mode='a', index=False, header=True)
-# printTextShadi("Saved the logits to logits_df.csv")
+# printTextme("Saved the logits to logits_df.csv")
 
 resp = target_model.generate_text(tg_model, dataloader, tokenizer, device=device)
 # generated_text_df['original'] = resp[0]
@@ -330,15 +330,15 @@ eval_loss_df['tr_5'] = resp6
 # tokens_df['tr_5'] = [ten.cpu().numpy() for ten in resp6[2]]
 
 # generated_text_df.to_csv(f'{RESULT_SAVE_PATH}/generated_text_df.csv', mode='a', index=False, header=True)
-# printTextShadi("Saved the generated texts to generated_text_df.csv")
+# printTextme("Saved the generated texts to generated_text_df.csv")
 # tokens_df.to_csv(f'{RESULT_SAVE_PATH}/tokens_df.csv', mode='a', index=False, header=True)
-# printTextShadi("Saved the tokens to tokens_df.csv")
+# printTextme("Saved the tokens to tokens_df.csv")
 eval_loss_df.to_csv(f'{RESULT_SAVE_PATH}/eval_loss.csv', mode='a', index=False, header=True)
-printTextShadi("Saved the loss values to eval_loss.csv")
+printTextme("Saved the loss values to eval_loss.csv")
 
 text_generation_end_time = time.time()
 time_taken_for_text_generation = secs_to_hrs_min_secs_str(text_generation_end_time - text_generation_start_time)
-printTextShadi(f"Time taken for text generation to complete: {time_taken_for_text_generation}")
+printTextme(f"Time taken for text generation to complete: {time_taken_for_text_generation}")
 
 # result = []
 loss_comparison = []
@@ -352,28 +352,28 @@ for i in range(len(loss_comparison)):
     
 
 
-printTextShadi("Loss Comparison")
-printTextShadi(loss_comparison)
+printTextme("Loss Comparison")
+printTextme(loss_comparison)
 
 y_true = dataframe['y_true'].tolist()
 
 
-printTextShadi()
+printTextme()
 y_pred_loss = [tup[0] for tup in loss_comparison]
-printTextShadi("y pred for loss comparison", y_pred_loss)
-printTextShadi("y true for loss comparison", y_true)
+printTextme("y pred for loss comparison", y_pred_loss)
+printTextme("y true for loss comparison", y_true)
 
-printTextShadi()
-printTextShadi(eval.evaluation_metrics(y_true, y_pred_loss))
-printTextShadi()
+printTextme()
+printTextme(eval.evaluation_metrics(y_true, y_pred_loss))
+printTextme()
 
 eval.eval_roc_curve(y_true, y_pred_loss)
 
 tpr_at_2_fpr, tpr_at_5_fpr, tpr_at_10_fpr = eval.calculate_tpr_at_fpr(y_true, y_pred_loss)
-printTextShadi(f"TPR at 2% FPR: {tpr_at_2_fpr}")
-printTextShadi(f"TPR at 5% FPR: {tpr_at_5_fpr}")
-printTextShadi(f"TPR at 10% FPR: {tpr_at_10_fpr}")
+printTextme(f"TPR at 2% FPR: {tpr_at_2_fpr}")
+printTextme(f"TPR at 5% FPR: {tpr_at_5_fpr}")
+printTextme(f"TPR at 10% FPR: {tpr_at_10_fpr}")
 
 end_time = time.time()
-printTextShadi(f"Execution time: {(end_time - start_time)/60} minutes")
-printTextShadi(f"Finished Program at {time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}")
+printTextme(f"Execution time: {(end_time - start_time)/60} minutes")
+printTextme(f"Finished Program at {time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}")
