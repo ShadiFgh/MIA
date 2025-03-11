@@ -1,7 +1,7 @@
 import pandas as pd
 from datasets import load_dataset
-import printtextShadi
-from printtextShadi import printTextShadi
+import printtextme
+from printtextme import printTextme
 
 def split_into_batches(df, batch_size):
     return [df[i:i + batch_size] for i in range(0, df.shape[0], batch_size)]
