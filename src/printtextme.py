@@ -4,7 +4,7 @@ import os
 RESULT_SAVE_PATH = "Results"
 
 def printTextme(*args, **kwargs):
-    # Check if env variable RESULT_SAVE_PATH is set; if so, overwrite the variable
+    # Check if env variable RESULT_SAVE_PATH is set
     env_result_save_path = os.getenv('RESULT_SAVE_PATH')
     if env_result_save_path:
         RESULT_SAVE_PATH = env_result_save_path
