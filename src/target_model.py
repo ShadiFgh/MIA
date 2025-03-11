@@ -3,8 +3,8 @@ import torch
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 import data
-import printtextShadi
-from printtextShadi import printTextShadi
+import printtextme
+from printtextme import printTextme
 from private_transformers import PrivacyEngine
 import torch.nn.functional as F
 
@@ -42,7 +42,7 @@ def trg_mdl_train(target_model, dataloader, device=torch.device('cpu')):
     sample_size=50000,
     epochs=100,
     max_grad_norm=0.1,
-    target_epsilon=3,
+    target_epsilon=1,
 )
     privacy_engine.attach(optimizer)
 
@@ -72,7 +72,7 @@ def trg_mdl_train(target_model, dataloader, device=torch.device('cpu')):
 
             # Check for NaN values in the loss
             if torch.isnan(loss):
-                printTextShadi("NaN loss encountered")
+                printTextme("NaN loss encountered")
                 continue
 
             # Backward pass
@@ -86,7 +86,7 @@ def trg_mdl_train(target_model, dataloader, device=torch.device('cpu')):
 
             # Accumulate the loss
             epoch_loss += loss.item()
-            tqdm.write(f"Batch loss: {loss.item():.4f}")  # Optionally printTextShadi the loss for each batch
+            tqdm.write(f"Batch loss: {loss.item():.4f}")  # Optionally printTextme the loss for each batch
 
         avg_loss = epoch_loss / len(dataloader)  # Calculate the average loss for the epoch
         tqdm.write(f"Epoch {epoch+1} Average Loss: {avg_loss:.4f}")
@@ -125,14 +125,14 @@ def generate_text(model, dataloader, tokenizer, device=torch.device('cpu')):
                 
                 input_ids = batch["input_ids"].to(device)
             except:
-                printTextShadi("Something went wrong with input_id part")
+                printTextme("Something went wrong with input_id part")
                 loss = torch.tensor(0)
                 all_loss.append(loss)
                 continue
             
             # Check if tensor is empty
             if input_ids.nelement() == 0:
-                printTextShadi("Empty tensor, skipping it")
+                printTextme("Empty tensor, skipping it")
                 loss = torch.tensor(0)
                 all_loss.append(loss)
                 continue
@@ -141,186 +141,15 @@ def generate_text(model, dataloader, tokenizer, device=torch.device('cpu')):
                 # Forward pass to calculate the loss (without generating text)
                 outputs = model(input_ids=input_ids, labels=input_ids)
                 loss = outputs.loss
-                printTextShadi(f"Loss: {loss.item()}")
+                printTextme(f"Loss: {loss.item()}")
                 all_loss.append(loss.item())
                 
                 total_loss += loss.item()
                 num_batches += 1
             except:
-                printTextShadi("Something went wrong during loss calculation, skipping it")
+                printTextme("Something went wrong during loss calculation, skipping it")
                 loss = torch.tensor(0)
                 all_loss.append(loss.item())
                 continue
     
     return all_loss
-
-
-
-# import numpy as np
-# import torch
-# import torch.nn.functional as F
-
-# import numpy as np
-# import pandas as pd
-# import torch
-# import torch.nn.functional as F
-
-# def get_scores_from_logits(model, dataloader, tokenizer, device=torch.device('cpu')):
-#     model.eval()
-#     model.to(device)
-
-#     # Initialize a list to store scores for the DataFrame
-#     all_scores = []
-
-#     with torch.no_grad():
-#         for batch in dataloader:
-#             try:
-#                 # Adjust input size and move to device
-#                 max_length = 1000 - MAX_NEW_TOKENS_TO_GENERATE
-#                 if batch['input_ids'].shape[1] > max_length:
-#                     batch['input_ids'] = batch['input_ids'][:, :max_length]
-                
-#                 input_ids = batch["input_ids"].to(device)
-
-#                 # Get logits for the batch
-#                 outputs = model(input_ids=input_ids)
-#                 logits = outputs.logits
-
-#                 # Process each sample in the batch
-#                 for i in range(input_ids.size(0)):
-#                     single_input_ids = input_ids[i][1:].unsqueeze(-1)
-#                     probs = F.softmax(logits[i, :-1], dim=-1)
-#                     log_probs = F.log_softmax(logits[i, :-1], dim=-1)
-#                     token_log_probs = log_probs.gather(dim=-1, index=single_input_ids).squeeze(-1)
-                    
-#                     # Calculate mean (mu) and standard deviation (sigma)
-#                     mu = (probs * log_probs).sum(-1)
-#                     sigma = (probs * torch.square(log_probs)).sum(-1) - torch.square(mu)
-
-#                     # Store scores for each sample
-#                     sample_scores = {}
-
-#                     ## mink
-#                     for ratio in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
-#                         k_length = int(len(token_log_probs) * ratio)
-#                         topk = np.sort(token_log_probs.cpu().numpy())[:k_length]
-#                         sample_scores[f'mink {ratio}'] = np.mean(topk).item()
-
-#                     ## mink++
-#                     mink_plus = (token_log_probs - mu) / sigma.sqrt()
-#                     for ratio in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
-#                         k_length = int(len(mink_plus) * ratio)
-#                         topk = np.sort(mink_plus.cpu().numpy())[:k_length]
-#                         sample_scores[f'mink++ {ratio}'] = np.mean(topk).item()
-
-#                     all_scores.append(sample_scores)
-
-#             except Exception as e:
-#                 printTextShadi(f"Error during score calculation: {e}")
-#                 continue  # Skip to the next batch if there’s an error
-
-#     # Create DataFrame from the accumulated scores
-#     df_scores = pd.DataFrame(all_scores)
-
-#     return df_scores
-
-
-
-
-
-# def generate_text(model, dataloader, tokenizer, device=torch.device('cpu')): 
-#     # Set model to evaluation mode 
-#     model.eval()
-#     model.to(device)
-    
-#     all_generated_text = [] 
-#     all_loss = []
-#     all_tokens = []
-#     total_loss = 0.0
-#     num_batches = 0
-
-#     # Disable gradient calculation for evaluation
-#     with torch.no_grad():
-#         # Evaluate on the dataset 
-#         for batch in dataloader:
-#             try:
-#                 print(f">>>>>>>>> {batch["input_ids"].shape}")
-#                 # Truncate input tensor if it exceded predefined limit (input+output=1024)
-#                 max_length = 1000 - MAX_NEW_TOKENS_TO_GENERATE
-#                 if batch['input_ids'].shape[1] > max_length:
-#                     batch['input_ids'] = batch['input_ids'][:, :max_length]
-#                     print(f"Truncated the input tensor shape: {batch['input_ids'].shape}") 
-#                 input_ids = batch["input_ids"].to(device)
-#             except:
-#                 printTextShadi("Shadi: Something went wrong with input_id part")
-#                 loss = torch.tensor(0)
-#                 all_loss.append(loss)
-#                 # emmpty tensor of size [1,1] with zeros
-#                 generated_text = torch.zeros((1,1))
-#                 all_tokens.append(generated_text)
-#                 all_generated_text.append("")
-#                 continue
-#             # Check if tensor is empty
-#             if input_ids.nelement() == 0:
-#                 printTextShadi("Shadi: Empty tensor, therefore skipping it")
-#                 loss = torch.tensor(0)
-#                 all_loss.append(loss)
-#                 # emmpty tensor of size [1,1] with zeros
-#                 generated_text = torch.zeros((1,1))
-#                 all_tokens.append(generated_text)
-#                 all_generated_text.append("")
-#                 continue
-#             try:
-#                 # Generate text 
-#                 generated_text = model.generate( 
-#                     input_ids=input_ids, 
-#                     # max_length=100,  # Adjust max length is input + output
-#                     max_new_tokens=MAX_NEW_TOKENS_TO_GENERATE, # Max output tokens
-#                     num_return_sequences=1,  # Number of sequences to generate per input 
-#                     temperature=0.7,  # Adjust temperature for randomness 
-#                     top_k=50,  # Adjust top_k for diversity 
-#                     top_p=0.95,  # Adjust top_p for diversity 
-#                     repetition_penalty=1.2,  # Adjust repetition penalty if needed 
-#                     do_sample=True,  # Enable sampling 
-#                     pad_token_id=tokenizer.eos_token_id,  # Specify end-of-sequence token 
-#                     num_beams=1,  # Set num_beams to 1 for greedy search 
-#                     no_repeat_ngram_size=2  # Adjust no_repeat_ngram_size to avoid repeating n-grams 
-#                 )
-#             except:
-#                 printTextShadi("Shadi: Something Went Wrong with this generation, skipping it")
-#                 loss = torch.tensor(0)
-#                 all_loss.append(loss)
-#                 # emmpty tensor of size [1,1] with zeros
-#                 generated_text = torch.zeros((1,1))
-#                 all_tokens.append(generated_text)
-#                 all_generated_text.append("")
-#                 continue
-            
-#             # Calculate loss
-#             outputs = model(input_ids=input_ids, labels=input_ids)
-#             loss = outputs.loss
-#             printTextShadi(f"Loss: {loss}")
-#             all_loss.append(loss)
-#             # total_loss += loss.item()
-#             # num_batches += 1
-
-#             # Decode generated text 
-#             decoded_text = [tokenizer.decode(tokens, skip_special_tokens=True) for tokens in generated_text] 
-#             all_generated_text.append(decoded_text) 
-#             all_tokens.append(generated_text)
-            
-#             # printTextShadi generated text 
-#             for text in decoded_text: 
-#                 printTextShadi(f"Generated Text:\n{text}\n") 
-
-#     # Calculate average loss
-#     # avg_loss = total_loss / num_batches if num_batches > 0 else float('inf')
-#     # printTextShadi(f"Average Loss: {avg_loss}")
-
-#     return all_generated_text, all_loss, all_tokens
-
-# Example usage:
-# tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-# model = GPT2LMHeadModel.from_pretrained("gpt2")
-# dataloader = ...  # Your DataLoader with the validation/test dataset
-# generated_texts, loss = evaluate_model(model, dataloader, tokenizer)
