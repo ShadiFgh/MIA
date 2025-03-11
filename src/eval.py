@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import label_binarize
 import numpy as np
 from sklearn.metrics import precision_recall_curve, roc_curve
-import printtextShadi
-from printtextShadi import printTextShadi
+import printtextme
+from printtextme import printTextme
 
 def confusion_matrix(y_true, y_pred):
     """
@@ -33,28 +33,28 @@ def confusion_matrix(y_true, y_pred):
 
 def evaluation_metrics(y_true, y_pred):
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred)
-    printTextShadi(f"TP: {tp}\nFP: {fp}\nFN: {fn}\nTN: {tp}")
+    printTextme(f"TP: {tp}\nFP: {fp}\nFN: {fn}\nTN: {tp}")
     PPV, NPV, sensitivity, specificity, accuracy = None, None, None, None, None
     if tp+fp > 0:
         PPV = tp/(tp+fp)
     else:
-        printTextShadi("PPV is undefined, since TP+FP=0")
+        printTextme("PPV is undefined, since TP+FP=0")
     if tn+fn > 0:
         NPV = tn/(fn+tn)
     else:
-        printTextShadi("NPV is undefined, since TN+FN=0")
+        printTextme("NPV is undefined, since TN+FN=0")
     if tp+fn > 0:
         sensitivity = tp/(tp+fn)
     else:
-        printTextShadi("Sensitivity is undefined, since TP+FN=0")
+        printTextme("Sensitivity is undefined, since TP+FN=0")
     if tn+fp > 0:
         specificity = tn/(tn+fp)
     else:
-        printTextShadi("Specificity is undefined, since TN+FP=0")
+        printTextme("Specificity is undefined, since TN+FP=0")
     if tp+fp+fn+tn > 0:
         accuracy = (tp+tn)/(tp+fp+fn+tn)
     else:
-        printTextShadi("Accuracy is undefined, since TP+FP+FN+TN=0") 
+        printTextme("Accuracy is undefined, since TP+FP+FN+TN=0") 
     f1 = f1_score(y_true, y_pred, pos_label=1)
     return {
         "Precision (Positive Predictive Value, PPV)": PPV,
@@ -76,10 +76,10 @@ def eval_roc_curve(y_true, y_pred):
     plt.title('ROC Curve')
     plt.legend()
     plt.show()
-    printTextShadi()
-    printTextShadi('FPR = {}, TPR = {}'.format(fpr, tpr))
-    printTextShadi()
-    printTextShadi('AUC = {}'.format(auc))
+    printTextme()
+    printTextme('FPR = {}, TPR = {}'.format(fpr, tpr))
+    printTextme()
+    printTextme('AUC = {}'.format(auc))
 
 
 # Function to interpolate TPR at specific FPR
