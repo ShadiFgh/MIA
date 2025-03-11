@@ -3,8 +3,8 @@ from transformers import pipeline
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from sklearn.metrics.pairwise import cosine_similarity
 import torch
-import printtextShadi
-from printtextShadi import printTextShadi
+import printtextme
+from printtextme import printTextme
 
 # def generate_back_translations(text, tgt_language, device=torch.device('cpu')):
 
