@@ -3,7 +3,7 @@ import os
 # Set default path to results
 RESULT_SAVE_PATH = "Results"
 
-def printTextShadi(*args, **kwargs):
+def printTextme(*args, **kwargs):
     # Check if env variable RESULT_SAVE_PATH is set; if so, overwrite the variable
     env_result_save_path = os.getenv('RESULT_SAVE_PATH')
     if env_result_save_path:
